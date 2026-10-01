@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "sv": {
+      "title": "Starta backstage",
+      "topic": "Localhost & klient–server",
+      "intro": "Premiären närmar sig, men startlampan tänds inte. Öppna Console och följ det röda spåret till uppgiftens JavaScript. Reparera startskriptet.",
+      "question": "När du laddar om sidan: hur går resan från webbläsarens request till serverns response? Vad körs på din dator?",
+      "hint": "Syntaxfelet finns i uppgiftens app.js. Provets egna svarsfält fungerar ändå."
+    },
+    "en": {
+      "title": "Boot up backstage",
+      "topic": "Localhost & client–server",
+      "intro": "Opening night is close, but the ready light stays off. Open Console and follow the red trail to this mission’s JavaScript. Repair the startup script.",
+      "question": "When you reload, how does the browser’s request travel to the server and return as a response? What runs on your computer?",
+      "hint": "The syntax error lives in this mission’s app.js. Your exam answer fields still work."
+    },
+    "file": "public/missions/01/app.js"
+  },
+  {
+    "id": 2,
+    "sv": {
+      "title": "Den försvunna artisten",
+      "topic": "HTML, CSS & DOM",
+      "intro": "Artistnamnet finns någonstans backstage men syns inte på skärmen. Inspektera scenkortet och få namnet att synas.",
+      "question": "Vad hittade du? Vad är skillnaden mellan HTML i filen och DOM som du ser i Elements? Vad händer med en ändring i DevTools när du laddar om?",
+      "hint": "Undersök artistnamnets style-attribut. Försök sedan spara lösningen i HTML-filen."
+    },
+    "en": {
+      "title": "The missing artist",
+      "topic": "HTML, CSS & DOM",
+      "intro": "The artist’s name is somewhere backstage, but it is missing from the screen. Inspect the stage card and bring the name into view.",
+      "question": "What did you find? How does HTML in the file differ from the DOM in Elements? What happens to a DevTools edit when you reload?",
+      "hint": "Inspect the artist name’s style attribute. Then try saving your fix in the HTML file."
+    },
+    "file": "public/missions/02/index.html"
+  },
+  {
+    "id": 3,
+    "sv": {
+      "title": "Play har tappat takten",
+      "topic": "JavaScript & händelser",
+      "intro": "Knappen finns. Spellistan är redo. Men Play tar rast. Hitta varför klicket inte ändrar spelarens status.",
+      "question": "Ta oss med från klick till funktion: hur hjälper JavaScript sidan att reagera? Vad upptäckte du i din felsökning?",
+      "hint": "Vilken händelse lyssnar addEventListener på?"
+    },
+    "en": {
+      "title": "Play has lost its rhythm",
+      "topic": "JavaScript & events",
+      "intro": "The button is here. The playlist is ready. But Play is taking a break. Find out why clicking does not change the player’s status.",
+      "question": "Walk us from the click to the function: how does JavaScript make the page react? What did you discover?",
+      "hint": "Which event is addEventListener listening for?"
+    },
+    "file": "public/missions/03/app.js"
+  },
+  {
+    "id": 4,
+    "sv": {
+      "title": "Hämta kvällens spellista",
+      "topic": "Network & API",
+      "intro": "DJ:n väntar på spellistan, men adressen leder fel. Hämta låtarna från musik-API:t och visa dem i spelaren.",
+      "question": "Vad visar Network för adress, metod och status? Vad betyder statusen? Hur skiljer sig GET från POST i vår musikplattform?",
+      "hint": "API:t finns på /api/tracks. Titta även på responsens innehåll."
+    },
+    "en": {
+      "title": "Get tonight’s playlist",
+      "topic": "Network & API",
+      "intro": "The DJ needs a playlist, but the address leads nowhere. Fetch the tracks from the music API and display them in the player.",
+      "question": "Which URL, method and status do you see in Network? What does that status mean? How do GET and POST differ in our music platform?",
+      "hint": "The API lives at /api/tracks. Inspect the response content too."
+    },
+    "file": "public/missions/04/app.js"
+  },
+  {
+    "id": 5,
+    "sv": {
+      "title": "Kom ihåg favoriten",
+      "topic": "Lagring & samtycke",
+      "intro": "Välj din favorit och spara. Ladda sedan om spelaren med knappen nedanför. Har den glömt vad du valde? Hjälp den att minnas.",
+      "question": "Varför försvinner en vanlig JavaScript-variabel vid omladdning? Hur hjälper localStorage? Förklara skillnaden mellan nödvändig lagring och lagring för statistik som kräver samtycke.",
+      "hint": "Läsning finns redan. Saknas det något när eleven klickar Spara? Provsvaren sparas separat."
+    },
+    "en": {
+      "title": "Remember your favourite",
+      "topic": "Storage & consent",
+      "intro": "Choose a favourite and save it. Then reload the player using the button below. Did it forget your choice? Help it remember.",
+      "question": "Why does an ordinary JavaScript variable disappear on reload? How does localStorage help? Explain essential storage versus analytics storage that requires consent.",
+      "hint": "Reading is already there. Is something missing when Save is clicked? Exam answers are saved separately."
+    },
+    "file": "public/missions/05/app.js"
+  },
+  {
+    "id": 6,
+    "sv": {
+      "title": "Följ spelningen",
+      "topic": "Identifiering & tracking",
+      "intro": "Vi vill registrera att en låt spelats, men servern säger nej. Följ play-eventet i Network och ge det ett giltigt visitorId.",
+      "question": "Vilka uppgifter skickas i eventet? Hur skiljer sig ett besökar-ID från ett inloggat user-ID? Varför är ett besökar-ID inte automatiskt anonymt? Hur hänger detta ihop med ett dataLayer-event?",
+      "hint": "Servern kräver type, trackId och ett visitorId som är en sträng. Eventet går bara till din lokala server."
+    },
+    "en": {
+      "title": "Follow the play",
+      "topic": "Identification & tracking",
+      "intro": "We want to record a track being played, but the server says no. Follow the play event in Network and give it a valid visitorId.",
+      "question": "What is sent in the event? How does a visitor ID differ from a logged-in user ID? Why is a visitor ID not automatically anonymous? How does this relate to a dataLayer event?",
+      "hint": "The server needs type, trackId and a visitorId string. The event is sent only to your local server."
+    },
+    "file": "public/missions/06/app.js"
+  },
+  {
+    "id": 7,
+    "sv": {
+      "title": "Encore: en sista låt",
+      "topic": "VG-spår · API & felhantering",
+      "intro": "Publiken vill ha mer! Koppla in encore-API:t, visa låttiteln och fånga ett misslyckat anrop så att besökaren får ett begripligt besked.",
+      "question": "Beskriv flödet från fetch till text på sidan. Hur hanterar du HTTP-fel respektive nätverksfel? Hur skulle du undersöka en sida som laddar långsamt?",
+      "hint": "GET /api/encore ger ett objekt med title och artist. Kontrollera response.ok innan du läser JSON."
+    },
+    "en": {
+      "title": "Encore: one more track",
+      "topic": "VG path · API & error handling",
+      "intro": "The crowd wants more! Connect the encore API, display the track title and catch a failed request so the visitor gets a helpful message.",
+      "question": "Describe the flow from fetch to text on screen. How do you handle HTTP errors versus network errors? How would you investigate a slow-loading page?",
+      "hint": "GET /api/encore returns title and artist. Check response.ok before reading JSON."
+    },
+    "file": "public/missions/07/app.js"
+  }
+]
