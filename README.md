@@ -28,7 +28,7 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 
 ## Kodstruktur
 
-`server.mjs`, `package.json`, `public/index.html`, `public/app.js`, `public/styles.css` känns igen från musikspelaren/labbarna. Uppgifterna har separata `index.html`/`app.js` under `public/missions/01`–`07`. Språktexterna bor i `app.js` och `missions.json`.
+`server.mjs`, `package.json`, `public/index.html`, `public/exam-shell.js`, `public/styles.css` känns igen från musikspelaren/labbarna. Uppgifterna har separata `index.html`/`app.js` under `public/missions/01`–`07`. Språktexterna bor i `app.js` och `missions.json`.
 
 `bridge.js` observerar uppgifternas beteende och returnerar kontrollresultat till provgränssnittet. Eleven arbetar i uppgiftsfilerna, inte provmotorn. Kontrollerna är avsiktligt synliga i en lokal draft och ska inte betraktas som fuskförebyggande.
 
@@ -43,3 +43,9 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 ## Verifiering
 
 `npm test` testar API, felstatus, beständig sessionssparning och isolerad uppgift med avsiktligt syntaxfel. Uppgift 01 ska ha ett syntaxfel från början; att syntaxkontrollera alla uppgiftsfiler som produktionskod vore fel.
+
+## Övningssteg och omladdning
+
+Nya omgångar börjar med ett obetygsatt övningssteg i `public/missions/00`. Det visar VS Code-sökvägen, hur du hittar uppgiftens fil i DevTools, hur du sparar och laddar om spelaren samt hur resonemang fungerar. Samma övning nås från uppdragskartan.
+
+Provets huvudfil heter `exam-shell.js`; elevernas uppgifter använder `app.js` i mapparna `missions/01`–`07`. Efter F5/Ctrl+R återkommer du till samma uppdrag i samma flik. **Ladda om spelaren** laddar bara uppgiften och behåller dina svar.

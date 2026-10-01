@@ -1,1 +1,37 @@
-:root{color-scheme:dark}body{background:#111729;color:#f5f6ff;font:16px/1.6 system-ui;padding:18px}h2{font-size:12px;letter-spacing:3px;color:#b5a0ff}h3{font-size:26px}button,select{font:inherit;border:1px solid #45516b;background:#242e44;color:#d0fc7e;padding:10px 16px;border-radius:9px;margin:6px}p{overflow-wrap:anywhere}button:focus-visible{outline:3px solid #b5a0ff}
+:root {
+  color-scheme: dark;
+}
+body {
+  background: #111729;
+  color: #f5f6ff;
+  font: 16px/1.6 system-ui;
+  padding: 18px;
+}
+h2 {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #b5a0ff;
+}
+h3 {
+  font-size: 26px;
+}
+button,
+select {
+  font: inherit;
+  border: 1px solid #45516b;
+  background: #242e44;
+  color: #d0fc7e;
+  padding: 10px 16px;
+  border-radius: 9px;
+  margin: 6px;
+}
+p {
+  overflow-wrap: anywhere;
+}
+button:focus-visible {
+  outline: 3px solid #b5a0ff;
+}
+#status[data-ready="true"] {
+  color: #d0fc7e;
+  font-weight: 700;
+}

@@ -1,0 +1,3 @@
+# Intentional syntax error for mission 01; keep this small file readable by hand.
+public/missions/01/app.js
+data/
