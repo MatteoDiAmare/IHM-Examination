@@ -1,3 +1,4 @@
+import { scoringRules, scoreSummary } from "./scoring.js";
 import { answerEntries, legacyEntries } from "./answers.js";
 import { restoreNavigation, saveNavigation } from "./navigation.js";
 // Navigation och provsvar bor här. Uppgifternas kod finns i missions/.
@@ -205,6 +206,31 @@ function render() {
   if (view === "tutorial") tutorial();
 }
 // Visa namnformulär eller återuppta en tidigare omgång. / Show entry form or resume.
+// Gemensamma kriterier visas i båda språken och följer med rapporten.
+function criteriaHTML() {
+  const sv = lang === "sv";
+  return `<details class="criteria"><summary>${sv ? "Poäng och betyg — G 12 p · VG 20 p" : "Points and grades — G 12 pts · VG 20 pts"}</summary>
+    <p>${sv ? "Max 24 poäng. G: minst 12 av 18 poäng i uppgift 1–6. VG: minst 20 av 24 poäng totalt, uppfyllda G-krav och 2 av 2 fördjupningspoäng." : "Maximum 24 points. G: at least 12 of 18 points in missions 1–6. VG: at least 20 of 24 points overall, all G requirements and 2 of 2 depth points."}</p>
+    <div class="score-table"><table><thead><tr><th>${sv ? "Uppgift" : "Mission"}</th><th>${sv ? "Kod" : "Code"}</th><th>${sv ? "Resonemang" : "Reasoning"}</th><th>${sv ? "Fördjupning" : "Depth"}</th><th>${sv ? "Max" : "Max"}</th></tr></thead><tbody>
+    ${scoringRules.missions.map((m) => `<tr><td>${m.id}</td><td>${m.code}</td><td>${m.reasoning}</td><td>${m.depth || "—"}</td><td>${m.code + m.reasoning + m.depth}</td></tr>`).join("")}
+    <tr><th>${sv ? "Totalt" : "Total"}</th><td>11</td><td>11</td><td>2</td><th>24</th></tr></tbody></table></div>
+    <p>${sv ? "För G behöver du visa grundläggande förståelse inom samtliga fem läranderesultat: klient/server och datainsamling; identifiering och spårning; JavaScript; HTML; samt ändring av identifierings- eller spårningskod. Det ska finnas en enkel fungerande HTML-ändring och en enkel fungerande ändring i identifierings-/spårningskoden. Poängsumman ensam räcker inte." : "G requires basic understanding across all five learning outcomes: client/server and data collection; identification and tracking; JavaScript; HTML; and modifying identification or tracking code. Include a simple working HTML change and a simple working change to identification/tracking code. The points total alone is not enough."}</p>
+    <p>${sv ? "Resonemang: 1 p för en relevant och huvudsakligen korrekt grundförklaring; 2 p när du också förklarar hur och varför; 3 p i uppgift 6 när du dessutom skiljer ett besökar-ID från en känd person och förklarar vad ID:t kan och inte kan visa. Fördjupning: 1 p för konkret analys av din kod; 2 p när du även motiverar lösningen, visar hur du kontrollerat den och analyserar en relevant risk eller begränsning med ett förbättringsförslag." : "Reasoning: 1 point for a relevant, mainly correct basic explanation; 2 points when you also explain how and why; 3 points in mission 6 when you also distinguish a visitor ID from a known person and explain what the ID can and cannot show. Depth: 1 point for concrete analysis of your code; 2 points when you also justify your solution, explain how you tested it and analyse a relevant risk or limitation with a suggested improvement."}</p>
+    <p>${sv ? "Kodkontroller ger högst 10 poäng direkt. I uppgift 7 ger hämtning och visning 1 p; den andra kodpoängen kräver fungerande hantering av HTTP- och nätverksfel och bedöms av läraren. Svar och slutbetyg bedöms efter inlämning. Ett sparat svar ger inte automatiskt poäng." : "Code checks award up to 10 points immediately. In mission 7, fetching and displaying earns 1 point; the second code point requires working HTTP and network error handling and is assessed by the teacher. Answers and the final grade are assessed after submission. A saved answer does not automatically earn points."}</p>
+  </details>`;
+}
+
+function pointsHTML() {
+  const score = scoreSummary(state?.missions);
+  const sv = lang === "sv";
+  return `<section class="panel score-panel"><div class="eyebrow">${sv ? "DINA POÄNG" : "YOUR POINTS"}</div><strong class="score-total">${score.automaticPoints} / ${score.automaticMaximum}</strong><p>${sv ? "Tekniska kontrollpoäng · 14 poäng återstår för lärarbedömning." : "Technical check points · 14 points require teacher assessment."}</p><p class="muted">${sv ? "Slutpoäng och betyg: inväntar bedömning. G kräver 12 p i uppgift 1–6 och grundläggande kunskaper i alla fem läranderesultat. VG kräver 20 p och full fördjupning." : "Final score and grade: awaiting assessment. G requires 12 points in missions 1–6 and basic knowledge across all five learning outcomes. VG requires 20 points and full depth marks."}</p>${criteriaHTML()}</section>`;
+}
+
+function missionPointsHTML(id) {
+  const m = scoreSummary(state.missions).missions[id - 1];
+  return `<p class="mission-points">${lang === "sv" ? `Kod: ${m.automaticPoints}/${m.code} p · Resonemang: upp till ${m.reasoning} p` : `Code: ${m.automaticPoints}/${m.code} pts · Reasoning: up to ${m.reasoning} pts`}${m.depth ? (lang === "sv" ? ` · Fördjupning: upp till ${m.depth} p` : ` · Depth: up to ${m.depth} pts`) : ""}</p>`;
+}
+
 function welcome() {
   app.innerHTML = /* HTML */ `<section class="hero">
     <div>
@@ -220,6 +246,7 @@ function welcome() {
         <p>${t("note")}</p>
         ${state ? `<p>${esc(state.firstName)} ${esc(state.lastName)}</p><button class="primary" id="resume">${t("resume")}</button><button class="ghost" id="new">${t("new")}</button>` : `<form id="start"><div class="name-row"><label class="field">${t("first")}<input name="first" required maxlength="80" autocomplete="given-name"></label><label class="field">${t("last")}<input name="last" required maxlength="80" autocomplete="family-name"></label></div><button class="primary">${t("start")}</button></form>`}
         <p class="save-status">${t("local")}</p>
+        ${criteriaHTML()}
       </div>
     </div>
     <div class="panel studio">
@@ -304,11 +331,12 @@ function map() {
       <small>${t("grading")}</small
       >${count === 6 ? `<p class="badge">${t("provisional")}</p>` : ""}
     </div>
+    ${pointsHTML()}
     <div class="cards">
       ${missions
         .map((m) => {
           const progress = state.missions[m.id - 1];
-          return `<button class="mission-card" data-mission="${m.id}"><span class="number">${m.id === 7 ? "ENCORE / VG" : "MISSION / 0" + m.id}</span><h3>${esc(m[lang].title)}</h3><p class="muted">${esc(m[lang].topic)}</p><span class="badge">${progress.passed ? "✓ " + t("ready") : answer(progress) ? "✎ " + t("review") : "↗ " + t("pending")}</span></button>`;
+          return `<button class="mission-card" data-mission="${m.id}"><span class="number">${m.id === 7 ? "ENCORE / VG" : "MISSION / 0" + m.id}</span><h3>${esc(m[lang].title)}</h3><p class="muted">${esc(m[lang].topic)}</p>${missionPointsHTML(m.id)}<span class="badge">${progress.passed ? "✓ " + t("ready") : answer(progress) ? "✎ " + t("review") : "↗ " + t("pending")}</span></button>`;
         })
         .join("")}
     </div>`;
@@ -348,6 +376,7 @@ function mission() {
         >${progress.passed ? "✓ " + t("ready") : t("pending")}</span
       >
     </div>
+    <div id="missionPoints">${missionPointsHTML(current)}</div>
     <div class="workspace">
       <section class="panel">
         <p>${esc(m[lang].intro)}</p>
@@ -470,6 +499,8 @@ function check() {
           ? t("success")
           : t("failed")
         : t("timeout");
+      document.querySelector("#missionPoints").innerHTML =
+        missionPointsHTML(id);
       document.querySelector("#technical").textContent = result?.passed
         ? "✓ " + t("ready")
         : t("pending");
@@ -497,6 +528,7 @@ function report() {
       BACKSTAGE / MISSION REPORT
     </div>
     <h1>${t("reportTitle")}</h1>
+    ${pointsHTML()}
     <p class="muted">${t("reportIntro")}</p>
     <p class="muted">
       ${lang === "sv" ? "Spara alla ändringar i VS Code först. ZIP-paketet innehåller din rapport och den sparade koden, redo att lämnas på lärplattformen." : "Save all changes in VS Code first. The ZIP package contains your report and saved code, ready to submit on the learning platform."}
@@ -509,7 +541,7 @@ function report() {
         min
       </p>
       <p>${t("grading")}</p>
-      ${state.missions.map((m) => `<div class="summary-row"><strong>${m.id}. ${esc(missions[m.id - 1][lang].title)}</strong><div class="badge">${m.passed ? t("ready") : t("pending")} · ${answer(m) ? t("review") : t("empty")}</div><small>${t("attempts")}: ${m.attempts.length}</small></div>`).join("")}
+      ${state.missions.map((m) => `<div class="summary-row"><strong>${m.id}. ${esc(missions[m.id - 1][lang].title)}</strong><div class="badge">${m.passed ? t("ready") : t("pending")} · ${answer(m) ? t("review") : t("empty")}</div><small>${t("attempts")}: ${m.attempts.length}</small>${missionPointsHTML(m.id)}</div>`).join("")}
       <div class="actions" style="margin-top:24px">
         <button id="zip" class="primary">
           ${lang === "sv" ? "Ladda ned inlämningspaket (ZIP)" : "Download submission package (ZIP)"}
@@ -535,6 +567,7 @@ function report() {
           ...state,
           exportedAt: new Date().toISOString(),
           assessment: "Teacher review required",
+          scoring: scoreSummary(state.missions),
           questionVersion: "2026-10-02",
           questions: missions.map((m) => ({
             id: m.id,
@@ -557,10 +590,10 @@ function report() {
 }
 // Skapa en läsbar rapport och skydda elevtext som HTML-text. / Export escaped student text.
 function reportHTML() {
-  return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${state.id}</p>${state.missions
+  return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${state.id}</p>${pointsHTML()}${state.missions
     .map(
       (m) =>
-        `<section><h2>${m.id}. ${esc(missions[m.id - 1][lang].title)}</h2><p>${esc(missions[m.id - 1][lang].question)}</p><p>${esc(m.passed ? t("ready") : t("pending"))} · ${esc(t("attempts"))}: ${m.attempts.length}</p>${answerEntries(
+        `<section><h2>${m.id}. ${esc(missions[m.id - 1][lang].title)}</h2><p>${esc(missions[m.id - 1][lang].question)}</p>${missionPointsHTML(m.id)}<p>${esc(m.passed ? t("ready") : t("pending"))} · ${esc(t("attempts"))}: ${m.attempts.length}</p>${answerEntries(
           missions[m.id - 1],
           m,
           lang,
@@ -744,6 +777,7 @@ async function downloadPackage() {
         report: {
           ...state,
           exportedAt: new Date().toISOString(),
+          scoring: scoreSummary(state.missions),
           questionVersion: "2026-10-02",
           questions: missions.map((m) => ({
             id: m.id,

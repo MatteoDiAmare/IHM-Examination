@@ -389,3 +389,38 @@ footer {
     transform: none !important;
   }
 }
+
+/* Poäng och kriterier ska vara läsbara även på mindre skärmar. */
+.score-panel {
+  margin: 0 0 24px;
+}
+.score-total {
+  font-size: 2.5rem;
+  display: block;
+  margin-top: 10px;
+}
+.criteria {
+  margin-top: 18px;
+}
+.criteria summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.score-table {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.score-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.score-table th,
+.score-table td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #73809a;
+}
+.mission-points {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}

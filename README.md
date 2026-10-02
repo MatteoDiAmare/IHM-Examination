@@ -57,3 +57,9 @@ Uppgift 1, 3, 5 och 6 har ett större resonemangsfält. Uppgift 2 och 4 har två
 ## Inlämningspaket
 
 I rapportvyn finns **Ladda ned inlämningspaket (ZIP)**. Spara först alla kodändringar i VS Code. Paketet innehåller den aktuella elevens rapport som JSON/HTML och ett körbart projekt med de sparade uppgiftsfilerna. Packa upp och kör `npm start` i `projekt/`. Serverns `data/`, Git-filer, andra sessioner och `node_modules/` följer inte med. Knappen skickar inget centralt; eleven lämnar ZIP-filen på lärplattformen. Starta om servern efter uppdateringen för att aktivera export-API:t.
+
+## Poäng och betyg
+
+Max 24 poäng. Uppgift 1–4 ger vardera 1 kodpoäng och 1 resonemangspoäng. Uppgift 5 ger 2+2, uppgift 6 ger 3+3 och uppgift 7 ger 2 kodpoäng, 2 resonemangspoäng och 2 fördjupningspoäng. G kräver minst 12 av 18 poäng i uppgift 1–6 och grundläggande kunskaper inom samtliga fem läranderesultat, inklusive fungerande grundläggande HTML- och identifierings-/spårningsändringar. VG kräver minst 20 av 24 poäng, uppfyllda G-krav och 2 av 2 fördjupningspoäng styrkta av koden.
+
+Kontroller ger maximalt 10 automatiska funktionspoäng. Uppgift 7 ger bara 1 automatisk kodpoäng för hämtning/visning; den andra kräver bedömd HTTP-/nätverksfelhantering. Övriga 14 poäng bedöms av läraren. Gränssnittet visar därför inget automatiskt slutbetyg. Regler, funktionspoäng och tomma bedömningsfält följer med JSON-/HTML-rapporten och ZIP-paketet. Elever kan läsa de fullständiga kriterierna på startsidan, uppdragskartan och rapporten.
