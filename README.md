@@ -16,7 +16,7 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 
 ## Viktigt när du provkör
 
-- Tekniska kontroller visar funktion; läraren fastställer betyget utifrån examinationsunderlaget. AI är tillåtet som hjälpmedel.
+- Tekniska kontroller visar funktion; läraren fastställer betyget utifrån examinationsunderlaget.
 - Sex oberoende uppdrag: ett olöst syntaxfel hindrar inte navigation, svar eller rapportexport.
 - Ingen tidsgräns eller automatisk låsning i applikationen. Förfluten tid visas i rapporten. 120-minutersregel och kl. 13-stopp behöver bestämmas inför provet.
 - Automatisk kontroll visar teknisk funktion. Resonemang och slutligt betyg bedöms av läraren. Encore-kontrollen testar hämtning/rendering, inte felhanteringens kvalitet.

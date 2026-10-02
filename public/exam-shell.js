@@ -49,7 +49,7 @@ const words = {
     finish: "Avsluta och spara",
     finished: "Provet är avslutat. Du kan fortfarande ladda ned rapporten.",
     grading:
-      "Tekniska kontroller visar vilka funktioner som fungerar. Läraren bedömer dina förklaringar och fastställer betyget G eller VG. AI är tillåtet som hjälpmedel.",
+      "Tekniska kontroller visar vilka funktioner som fungerar. Läraren bedömer dina förklaringar och fastställer betyget G eller VG.",
     provisional:
       "Alla sex tekniska G-uppdrag är klara! Resonemangen återstår för lärarbedömning.",
     vg: "Encore är frivilligt. Kontrollen testar hämtning och visning; felhantering och VG bedöms av läraren.",
@@ -108,7 +108,7 @@ const words = {
     finish: "Finish and save",
     finished: "The exam is finished. You can still download the report.",
     grading:
-      "Technical checks show which functions work. Your teacher assesses your explanations and determines your G or VG grade. AI is allowed as a tool.",
+      "Technical checks show which functions work. Your teacher assesses your explanations and determines your G or VG grade.",
     provisional:
       "All six technical G missions are complete! Reasoning still needs teacher assessment.",
     vg: "Encore is optional. The check tests fetching and rendering; error handling and VG need teacher assessment.",
