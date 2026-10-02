@@ -10,7 +10,7 @@ En spelbar examination i Teknik för digitala plattformar: rädda en musikplattf
 4. Öppna **http://localhost:3000**. Ingen `npm install` behövs.
 5. Välj språk, skriv för- och efternamn och starta uppdraget.
 6. Öppna filen som anges i uppdraget. Spara din ändring i VS Code och välj **Ladda om spelaren** före kontroll. För API-/eventuppgifter behöver du även klicka på uppgiftens knapp.
-7. Spara resonemang, gå vidare och exportera JSON eller läsbar HTML från rapportvyn. Lämna rapport och ändrade kodfiler på lärplattformen.
+7. Spara resonemang och alla kodändringar i VS Code. Ladda ned HTML-inlämningen från rapportvyn. Den innehåller svar och sparad kod; lämna denna enda fil på lärplattformen.
 
 I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebefordran kräver det, öppna port 3000 via **Ports**. Relativa API-adresser fungerar där också. Håll porten privat.
 
@@ -54,12 +54,14 @@ Provets huvudfil heter `exam-shell.js`; elevernas uppgifter använder `app.js` i
 
 Uppgift 1, 3, 5 och 6 har ett större resonemangsfält. Uppgift 2 och 4 har två specifika fält. Uppgift 7 har ett resonemangsfält om API-lösningen och ett separat fördjupningsfält där eleven förklarar och granskar en egen ändring i kod för identifiering eller spårning. Fördjupningen bedöms tillsammans med den inlämnade koden. Svenska och engelska följer samma struktur. Tidigare svar från den äldre versionens tre fält visas separat och bevaras i både JSON- och HTML-rapporten.
 
-## Inlämningspaket
+## Inlämning med svar och kod
 
-I rapportvyn finns **Ladda ned inlämningspaket (ZIP)**. Spara först alla kodändringar i VS Code. Paketet innehåller den aktuella elevens rapport som JSON/HTML och ett körbart projekt med de sparade uppgiftsfilerna. Packa upp och kör `npm start` i `projekt/`. Serverns `data/`, Git-filer, andra sessioner och `node_modules/` följer inte med. Knappen skickar inget centralt; eleven lämnar ZIP-filen på lärplattformen. Starta om servern efter uppdateringen för att aktivera export-API:t.
+I rapportvyn finns **Ladda ned inlämningen (HTML)**. Spara först alla kodändringar i VS Code och låt servern vara igång. Knappen hämtar uppgift 1–7:s angivna kodfiler och HTML-filer direkt från samma server, med webbläsarcachen avstängd. Den skapar en enda HTML-fil med namn, svar, kontrollpoäng och sparad kod under respektive uppgift. Koden visas som text och körs inte. Rapporten är fristående och kan öppnas utan server eller internet. Öppna filen, kontrollera innehållet och lämna den på lärplattformen.
+
+JSON-knappen ger samma svar och kod i strukturerad form som alternativ. Om en fil inte kan hämtas finns svaren ändå med; både appen och rapporten listar exakt vilka kodfiler som saknas. Starta servern och ladda ned igen, eller lämna de saknade filerna separat. Ej sparade ändringar i VS Code följer inte med. Övningssteget, serverns datafiler och provmotorn ingår inte i kodunderlaget. Ingen automatisk central inlämning används.
 
 ## Poäng och betyg
 
 Max 24 poäng. Uppgift 1–4 ger vardera 1 kodpoäng och 1 resonemangspoäng. Uppgift 5 ger 2+2, uppgift 6 ger 3+3 och uppgift 7 ger 2 kodpoäng, 2 resonemangspoäng och 2 fördjupningspoäng. G kräver minst 12 av 18 poäng i uppgift 1–6 och grundläggande kunskaper inom samtliga fem läranderesultat, inklusive fungerande grundläggande HTML- och identifierings-/spårningsändringar. VG kräver minst 20 av 24 poäng, uppfyllda G-krav och 2 av 2 fördjupningspoäng styrkta av koden.
 
-Kontroller ger maximalt 10 automatiska funktionspoäng. Uppgift 7 ger bara 1 automatisk kodpoäng för hämtning/visning; den andra kräver bedömd HTTP-/nätverksfelhantering. Övriga 14 poäng bedöms av läraren. Gränssnittet visar därför inget automatiskt slutbetyg. Regler, funktionspoäng och tomma bedömningsfält följer med JSON-/HTML-rapporten och ZIP-paketet. Elever kan läsa de fullständiga kriterierna på startsidan, uppdragskartan och rapporten.
+Kontroller ger maximalt 10 automatiska funktionspoäng. Uppgift 7 ger bara 1 automatisk kodpoäng för hämtning/visning; den andra kräver bedömd HTTP-/nätverksfelhantering. Övriga 14 poäng bedöms av läraren. Gränssnittet visar därför inget automatiskt slutbetyg. Regler, funktionspoäng och tomma bedömningsfält följer med JSON-/HTML-rapporten. Elever kan läsa de fullständiga kriterierna på startsidan, uppdragskartan och rapporten.

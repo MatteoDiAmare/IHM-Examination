@@ -1,3 +1,4 @@
+import { collectSourceFiles, sourceSection } from "./submission.js";
 import { scoringRules, scoreSummary } from "./scoring.js";
 import { answerEntries, legacyEntries } from "./answers.js";
 import { restoreNavigation, saveNavigation } from "./navigation.js";
@@ -44,9 +45,9 @@ const words = {
       "Ingen kontroll kunde slutföras. Dina resonemang går fortfarande att spara.",
     reportTitle: "Din insats, samlad.",
     reportIntro:
-      "Här finns det du har löst och det du har förklarat. Ladda ned rapporten och lämna den tillsammans med dina kodfiler på lärplattformen.",
+      "Här finns det du har löst och det du har förklarat. Ladda ned HTML-inlämningen med svar och kod och lämna den på lärplattformen.",
     json: "Ladda ned JSON",
-    html: "Ladda ned läsbar rapport",
+    html: "Ladda ned inlämningen (HTML)",
     finish: "Avsluta och spara",
     finished: "Provet är avslutat. Du kan fortfarande ladda ned rapporten.",
     grading:
@@ -103,9 +104,9 @@ const words = {
     timeout: "The check could not finish. You can still save your reasoning.",
     reportTitle: "Your work, all together.",
     reportIntro:
-      "Here is what you fixed and what you explained. Download the report and submit it with your code files on the learning platform.",
+      "Here is what you fixed and what you explained. Download the HTML submission with answers and code and submit it on the learning platform.",
     json: "Download JSON",
-    html: "Download readable report",
+    html: "Download submission (HTML)",
     finish: "Finish and save",
     finished: "The exam is finished. You can still download the report.",
     grading:
@@ -531,7 +532,7 @@ function report() {
     ${pointsHTML()}
     <p class="muted">${t("reportIntro")}</p>
     <p class="muted">
-      ${lang === "sv" ? "Spara alla ändringar i VS Code först. ZIP-paketet innehåller din rapport och den sparade koden, redo att lämnas på lärplattformen." : "Save all changes in VS Code first. The ZIP package contains your report and saved code, ready to submit on the learning platform."}
+      ${lang === "sv" ? "Spara alla ändringar i VS Code först (Ctrl+S eller Cmd+S). Låt servern vara igång. HTML-inlämningen innehåller dina svar och den sparade koden under varje uppgift. Öppna filen och kontrollera att koden finns med innan du lämnar den på lärplattformen." : "Save all changes in VS Code first (Ctrl+S or Cmd+S). Keep the server running. The HTML submission includes your answers and saved code under each mission. Open the file and check that the code is included before submitting it on the learning platform."}
     </p>
     <div class="panel">
       <h3>${esc(state.firstName)} ${esc(state.lastName)}</h3>
@@ -543,11 +544,8 @@ function report() {
       <p>${t("grading")}</p>
       ${state.missions.map((m) => `<div class="summary-row"><strong>${m.id}. ${esc(missions[m.id - 1][lang].title)}</strong><div class="badge">${m.passed ? t("ready") : t("pending")} · ${answer(m) ? t("review") : t("empty")}</div><small>${t("attempts")}: ${m.attempts.length}</small>${missionPointsHTML(m.id)}</div>`).join("")}
       <div class="actions" style="margin-top:24px">
-        <button id="zip" class="primary">
-          ${lang === "sv" ? "Ladda ned inlämningspaket (ZIP)" : "Download submission package (ZIP)"}
-        </button>
-        <button id="json">${t("json")}</button
-        ><button id="html">${t("html")}</button
+        <button id="html" class="primary">${t("html")}</button
+        ><button id="json">${t("json")}</button
         ><button id="finish" ${state.finishedAt ? "disabled" : ""}>
           ${t("finish")}
         </button>
@@ -559,29 +557,8 @@ function report() {
     view = "map";
     render();
   };
-  document.querySelector("#json").onclick = () =>
-    download(
-      "json",
-      JSON.stringify(
-        {
-          ...state,
-          exportedAt: new Date().toISOString(),
-          assessment: "Teacher review required",
-          scoring: scoreSummary(state.missions),
-          questionVersion: "2026-10-02",
-          questions: missions.map((m) => ({
-            id: m.id,
-            fields: m[lang].fields,
-          })),
-        },
-        null,
-        2,
-      ),
-      "application/json",
-    );
-  document.querySelector("#zip").onclick = downloadPackage;
-  document.querySelector("#html").onclick = () =>
-    download("html", reportHTML(), "text/html");
+  document.querySelector("#json").onclick = () => downloadSubmission("json");
+  document.querySelector("#html").onclick = () => downloadSubmission("html");
   document.querySelector("#finish").onclick = () => {
     state.finishedAt = new Date().toISOString();
     persist();
@@ -589,8 +566,8 @@ function report() {
   };
 }
 // Skapa en läsbar rapport och skydda elevtext som HTML-text. / Export escaped student text.
-function reportHTML() {
-  return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${state.id}</p>${pointsHTML()}${state.missions
+function reportHTML(sources) {
+  return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}.source-code{font:13px/1.5 monospace;background:#f1f3f6;padding:16px;overflow-wrap:anywhere}.missing-code{color:#a01919;font-weight:bold}.score-table table{width:100%;border-collapse:collapse}.score-table td,.score-table th{text-align:left;padding:8px;border-bottom:1px solid #ccc}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${state.id}</p>${pointsHTML()}${sourceSummaryHTML(sources)}${state.missions
     .map(
       (m) =>
         `<section><h2>${m.id}. ${esc(missions[m.id - 1][lang].title)}</h2><p>${esc(missions[m.id - 1][lang].question)}</p>${missionPointsHTML(m.id)}<p>${esc(m.passed ? t("ready") : t("pending"))} · ${esc(t("attempts"))}: ${m.attempts.length}</p>${answerEntries(
@@ -602,7 +579,7 @@ function reportHTML() {
             (entry) =>
               `<h3>${esc(entry.label)}</h3><pre>${esc(entry.value || t("empty"))}</pre>`,
           )
-          .join("")}</section>`,
+          .join("")}${sourceSection(sources, m.id, lang)}</section>`,
     )
     .join("")}</html>`;
 }
@@ -765,46 +742,65 @@ ${esc(state.practiceAnswer || "")}</textarea>
   };
 }
 
-// Servern läser de sparade kodfilerna, så spara i VS Code före export.
-async function downloadPackage() {
-  const button = document.querySelector("#zip");
-  button.disabled = true;
+// Läs sparade filer utan ZIP eller ett separat export-API. Svaren kan räddas även om servern stannat.
+function sourceSummaryHTML(sources) {
+  const count = sources.files.filter((f) => f.status === "included").length;
+  const sv = lang === "sv";
+  return `<section><h2>${sv ? "Kod i inlämningen" : "Code in this submission"}</h2><p>${count}/${sources.files.length} ${sv ? "kodfiler hämtade" : "code files included"} · ${esc(sources.capturedAt)}</p><p>${sv ? "Detta är filerna som var sparade vid nedladdningen. Ändringar som inte sparats i VS Code följer inte med." : "These are the files saved at download time. Unsaved changes in VS Code are not included."}</p>${
+    sources.complete
+      ? ""
+      : `<p class="missing-code">${sv ? "INLÄMNINGEN SAKNAR KODFILER. Lämna filerna nedan separat, eller starta servern och ladda ned inlämningen igen." : "CODE FILES ARE MISSING. Submit the files listed below separately, or start the server and download the submission again."}</p><ul>${sources.files
+          .filter((f) => f.status !== "included")
+          .map((f) => `<li>${esc(f.path)}</li>`)
+          .join("")}</ul>`
+  }</section>`;
+}
+
+async function downloadSubmission(format) {
+  const buttons = [...document.querySelectorAll("#html, #json")];
+  buttons.forEach((button) => (button.disabled = true));
+  const status = document.querySelector("#saveStatus");
+  status.textContent =
+    lang === "sv" ? "Hämtar din sparade kod…" : "Collecting your saved code…";
   try {
-    const response = await fetch("/api/export", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        report: {
-          ...state,
-          exportedAt: new Date().toISOString(),
-          scoring: scoreSummary(state.missions),
-          questionVersion: "2026-10-02",
-          questions: missions.map((m) => ({
-            id: m.id,
-            fields: m[lang].fields,
-          })),
-        },
-        html: reportHTML(),
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!response.ok) throw new Error("HTTP " + response.status);
-    const url = URL.createObjectURL(await response.blob());
-    const link = document.createElement("a");
-    link.href = url;
-    const name = (state.firstName + "_" + state.lastName)
-      .normalize("NFKD")
-      .replace(/[^a-zA-Z0-9_-]/g, "");
-    link.download = "inlamning_" + name + "_" + state.id.slice(0, 8) + ".zip";
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const sources = await collectSourceFiles(missions);
+    const payload = {
+      ...state,
+      exportedAt: new Date().toISOString(),
+      assessment: "Teacher review required",
+      scoring: scoreSummary(state.missions),
+      questionVersion: "2026-10-02",
+      questions: missions.map((m) => ({ id: m.id, fields: m[lang].fields })),
+      sources,
+    };
+    if (format === "html") download("html", reportHTML(sources), "text/html");
+    else download("json", JSON.stringify(payload, null, 2), "application/json");
+    if (sources.complete) {
+      status.textContent =
+        lang === "sv"
+          ? "Inlämningen har skapats med svar och kod. Öppna den nedladdade filen och kontrollera innehållet."
+          : "Your submission was created with answers and code. Open the downloaded file and check its contents.";
+    } else {
+      status.textContent =
+        (lang === "sv"
+          ? "Svaren finns i rapporten, men följande kodfiler saknas. Starta servern och försök igen, eller lämna filerna separat: "
+          : "Your answers are in the report, but these code files are missing. Start the server and try again, or submit these files separately: ") +
+        sources.files
+          .filter((f) => f.status !== "included")
+          .map((f) => f.path)
+          .join(", ");
+      toast(
+        lang === "sv"
+          ? "Rapporten saknar kodfiler. Se listan under knapparna."
+          : "The report is missing code files. See the list below the buttons.",
+      );
+    }
   } catch {
-    toast(
+    status.textContent =
       lang === "sv"
-        ? "Paketet kunde inte skapas. Kontrollera att servern körs. Du kan fortfarande ladda ned rapporten separat."
-        : "Could not create the package. Check that the server is running. You can still download the report separately.",
-    );
+        ? "Inlämningen kunde inte skapas. Dina sparade svar finns kvar. Ladda om sidan och försök igen."
+        : "The submission could not be created. Your saved answers remain. Reload the page and try again.";
   } finally {
-    button.disabled = false;
+    buttons.forEach((button) => (button.disabled = false));
   }
 }
