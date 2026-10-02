@@ -201,12 +201,16 @@
       "title": "Encore: en sista låt",
       "topic": "VG-spår · API & felhantering",
       "intro": "Publiken vill ha mer! Koppla in encore-API:t, visa låttiteln och fånga ett misslyckat anrop så att besökaren får ett begripligt besked.",
-      "question": "Beskriv hur du hämtar och visar bonuslåten. Hur hjälper du besökaren när anropet misslyckas? Motivera hur din lösning hanterar både HTTP-fel och nätverksfel. Hur skulle du undersöka långsam laddning, och vad skulle du leta efter?",
+      "question": "Beskriv hur du hämtar och visar bonuslåten. Hur hjälper du besökaren när anropet misslyckas? Motivera hur din lösning hanterar både HTTP-fel och nätverksfel. Hur skulle du undersöka långsam laddning, och vad skulle du leta efter?\n\nVisa vad du har förstått på djupet. Välj en ändring du gjort i koden för identifiering eller spårning. Förklara hur den fungerar, varför du valde lösningen och hur du kontrollerade resultatet. Beskriv också en begränsning eller risk med lösningen och hur den skulle kunna förbättras.",
       "hint": "GET /api/encore ger ett objekt med title och artist. Kontrollera response.ok innan du läser JSON.",
       "fields": [
         {
           "key": "reasoning",
           "label": "Beskriv hur du hämtar och visar bonuslåten. Hur hjälper du besökaren när anropet misslyckas? Motivera hur din lösning hanterar både HTTP-fel och nätverksfel. Hur skulle du undersöka långsam laddning, och vad skulle du leta efter?"
+        },
+        {
+          "key": "vgEvidence",
+          "label": "Visa vad du har förstått på djupet. Välj en ändring du gjort i koden för identifiering eller spårning. Förklara hur den fungerar, varför du valde lösningen och hur du kontrollerade resultatet. Beskriv också en begränsning eller risk med lösningen och hur den skulle kunna förbättras."
         }
       ]
     },
@@ -214,12 +218,16 @@
       "title": "Encore: one more track",
       "topic": "VG path · API & error handling",
       "intro": "The crowd wants more! Connect the encore API, display the track title and catch a failed request so the visitor gets a helpful message.",
-      "question": "Describe how you fetch and display the bonus track. How do you help the visitor when the request fails? Explain how your solution handles both HTTP errors and network errors. How would you investigate slow loading, and what would you look for?",
+      "question": "Describe how you fetch and display the bonus track. How do you help the visitor when the request fails? Explain how your solution handles both HTTP errors and network errors. How would you investigate slow loading, and what would you look for?\n\nShow what you have understood in depth. Choose a change you made to the code for identification or tracking. Explain how it works, why you chose the solution and how you checked the result. Also describe a limitation or risk of the solution and how it could be improved.",
       "hint": "GET /api/encore returns title and artist. Check response.ok before reading JSON.",
       "fields": [
         {
           "key": "reasoning",
           "label": "Describe how you fetch and display the bonus track. How do you help the visitor when the request fails? Explain how your solution handles both HTTP errors and network errors. How would you investigate slow loading, and what would you look for?"
+        },
+        {
+          "key": "vgEvidence",
+          "label": "Show what you have understood in depth. Choose a change you made to the code for identification or tracking. Explain how it works, why you chose the solution and how you checked the result. Also describe a limitation or risk of the solution and how it could be improved."
         }
       ]
     },

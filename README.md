@@ -52,7 +52,7 @@ Provets huvudfil heter `exam-shell.js`; elevernas uppgifter använder `app.js` i
 
 ## Frågor och svar
 
-Uppgift 1, 3 och 5–7 har ett större resonemangsfält. Uppgift 2 och 4 har två specifika fält. Svenska och engelska följer samma struktur. Tidigare svar från den äldre versionens tre fält visas separat och bevaras i både JSON- och HTML-rapporten.
+Uppgift 1, 3, 5 och 6 har ett större resonemangsfält. Uppgift 2 och 4 har två specifika fält. Uppgift 7 har ett resonemangsfält om API-lösningen och ett separat fördjupningsfält där eleven förklarar och granskar en egen ändring i kod för identifiering eller spårning. Fördjupningen bedöms tillsammans med den inlämnade koden. Svenska och engelska följer samma struktur. Tidigare svar från den äldre versionens tre fält visas separat och bevaras i både JSON- och HTML-rapporten.
 
 ## Inlämningspaket
 
