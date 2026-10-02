@@ -498,6 +498,9 @@ function report() {
     </div>
     <h1>${t("reportTitle")}</h1>
     <p class="muted">${t("reportIntro")}</p>
+    <p class="muted">
+      ${lang === "sv" ? "Spara alla ändringar i VS Code först. ZIP-paketet innehåller din rapport och den sparade koden, redo att lämnas på lärplattformen." : "Save all changes in VS Code first. The ZIP package contains your report and saved code, ready to submit on the learning platform."}
+    </p>
     <div class="panel">
       <h3>${esc(state.firstName)} ${esc(state.lastName)}</h3>
       <p class="muted">
@@ -508,7 +511,10 @@ function report() {
       <p>${t("grading")}</p>
       ${state.missions.map((m) => `<div class="summary-row"><strong>${m.id}. ${esc(missions[m.id - 1][lang].title)}</strong><div class="badge">${m.passed ? t("ready") : t("pending")} · ${answer(m) ? t("review") : t("empty")}</div><small>${t("attempts")}: ${m.attempts.length}</small></div>`).join("")}
       <div class="actions" style="margin-top:24px">
-        <button id="json" class="primary">${t("json")}</button
+        <button id="zip" class="primary">
+          ${lang === "sv" ? "Ladda ned inlämningspaket (ZIP)" : "Download submission package (ZIP)"}
+        </button>
+        <button id="json">${t("json")}</button
         ><button id="html">${t("html")}</button
         ><button id="finish" ${state.finishedAt ? "disabled" : ""}>
           ${t("finish")}
@@ -540,6 +546,7 @@ function report() {
       ),
       "application/json",
     );
+  document.querySelector("#zip").onclick = downloadPackage;
   document.querySelector("#html").onclick = () =>
     download("html", reportHTML(), "text/html");
   document.querySelector("#finish").onclick = () => {
@@ -723,4 +730,47 @@ ${esc(state.practiceAnswer || "")}</textarea>
     window.addEventListener("message", receive);
     frame.contentWindow.postMessage({ type: "check", token }, location.origin);
   };
+}
+
+// Servern läser de sparade kodfilerna, så spara i VS Code före export.
+async function downloadPackage() {
+  const button = document.querySelector("#zip");
+  button.disabled = true;
+  try {
+    const response = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        report: {
+          ...state,
+          exportedAt: new Date().toISOString(),
+          questionVersion: "2026-10-02",
+          questions: missions.map((m) => ({
+            id: m.id,
+            fields: m[lang].fields,
+          })),
+        },
+        html: reportHTML(),
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    const name = (state.firstName + "_" + state.lastName)
+      .normalize("NFKD")
+      .replace(/[^a-zA-Z0-9_-]/g, "");
+    link.download = "inlamning_" + name + "_" + state.id.slice(0, 8) + ".zip";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch {
+    toast(
+      lang === "sv"
+        ? "Paketet kunde inte skapas. Kontrollera att servern körs. Du kan fortfarande ladda ned rapporten separat."
+        : "Could not create the package. Check that the server is running. You can still download the report separately.",
+    );
+  } finally {
+    button.disabled = false;
+  }
 }

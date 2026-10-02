@@ -53,3 +53,7 @@ Provets huvudfil heter `exam-shell.js`; elevernas uppgifter använder `app.js` i
 ## Frågor och svar
 
 Uppgift 1, 3 och 5–7 har ett större resonemangsfält. Uppgift 2 och 4 har två specifika fält. Svenska och engelska följer samma struktur. Tidigare svar från den äldre versionens tre fält visas separat och bevaras i både JSON- och HTML-rapporten.
+
+## Inlämningspaket
+
+I rapportvyn finns **Ladda ned inlämningspaket (ZIP)**. Spara först alla kodändringar i VS Code. Paketet innehåller den aktuella elevens rapport som JSON/HTML och ett körbart projekt med de sparade uppgiftsfilerna. Packa upp och kör `npm start` i `projekt/`. Serverns `data/`, Git-filer, andra sessioner och `node_modules/` följer inte med. Knappen skickar inget centralt; eleven lämnar ZIP-filen på lärplattformen. Starta om servern efter uppdateringen för att aktivera export-API:t.

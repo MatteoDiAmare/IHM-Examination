@@ -1,3 +1,4 @@
+import { submissionZip } from "./zip.mjs";
 import http from "node:http";
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
@@ -47,7 +48,9 @@ export function createServer(dataDir = path.join(root, "data")) {
       }
       if (
         req.method === "POST" &&
-        (session || url.pathname === "/api/events")
+        (session ||
+          url.pathname === "/api/events" ||
+          url.pathname === "/api/export")
       ) {
         let body = "";
         for await (const chunk of req) {
@@ -60,6 +63,24 @@ export function createServer(dataDir = path.join(root, "data")) {
           value = JSON.parse(body);
         } catch {
           return json(res, 400, { error: "INVALID_JSON" });
+        }
+        if (url.pathname === "/api/export") {
+          if (
+            !value?.report ||
+            typeof value.report.id !== "string" ||
+            !Array.isArray(value.report.missions) ||
+            typeof value.html !== "string"
+          ) {
+            return json(res, 422, { error: "INVALID_REPORT" });
+          }
+          const archive = await submissionZip(root, value.report, value.html);
+          res.writeHead(200, {
+            "Content-Type": "application/zip",
+            "Content-Disposition":
+              'attachment; filename="backstage-inlamning.zip"',
+            "Cache-Control": "no-store",
+          });
+          return res.end(archive);
         }
         if (session) {
           if (value.id !== session[1] || !Array.isArray(value.missions))
