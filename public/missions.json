@@ -5,15 +5,27 @@
       "title": "Starta backstage",
       "topic": "Localhost & klient–server",
       "intro": "Premiären närmar sig, men startlampan tänds inte. Öppna Console och följ det röda spåret till uppgiftens JavaScript. Reparera startskriptet.",
-      "question": "När du laddar om sidan: hur går resan från webbläsarens request till serverns response? Vad körs på din dator?",
-      "hint": "Syntaxfelet finns i uppgiftens app.js. Provets egna svarsfält fungerar ändå."
+      "question": "Sidan vaknar till liv! Berätta vad som händer från att du laddar om tills sidan visas. Var finns webbläsaren och servern när du kör på localhost?",
+      "hint": "Syntaxfelet finns i uppgiftens app.js. Provets egna svarsfält fungerar ändå.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Sidan vaknar till liv! Berätta vad som händer från att du laddar om tills sidan visas. Var finns webbläsaren och servern när du kör på localhost?"
+        }
+      ]
     },
     "en": {
       "title": "Boot up backstage",
       "topic": "Localhost & client–server",
       "intro": "Opening night is close, but the ready light stays off. Open Console and follow the red trail to this mission’s JavaScript. Repair the startup script.",
-      "question": "When you reload, how does the browser’s request travel to the server and return as a response? What runs on your computer?",
-      "hint": "The syntax error lives in this mission’s app.js. Your exam answer fields still work."
+      "question": "The page comes to life! Explain what happens from the moment you reload until the page appears. Where are the browser and server when you run on localhost?",
+      "hint": "The syntax error lives in this mission’s app.js. Your exam answer fields still work.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "The page comes to life! Explain what happens from the moment you reload until the page appears. Where are the browser and server when you run on localhost?"
+        }
+      ]
     },
     "file": "public/missions/01/app.js"
   },
@@ -23,15 +35,35 @@
       "title": "Den försvunna artisten",
       "topic": "HTML, CSS & DOM",
       "intro": "Artistnamnet finns någonstans backstage men syns inte på skärmen. Inspektera scenkortet och få namnet att synas.",
-      "question": "Vad hittade du? Vad är skillnaden mellan HTML i filen och DOM som du ser i Elements? Vad händer med en ändring i DevTools när du laddar om?",
-      "hint": "Undersök artistnamnets style-attribut. Försök sedan spara lösningen i HTML-filen."
+      "question": "Vad gjorde artistnamnet osynligt, och vad ändrade du?\n\nOm du ändrar i DevTools i stället för i filen — vad händer när du laddar om?",
+      "hint": "Undersök artistnamnets style-attribut. Försök sedan spara lösningen i HTML-filen.",
+      "fields": [
+        {
+          "key": "fix",
+          "label": "Vad gjorde artistnamnet osynligt, och vad ändrade du?"
+        },
+        {
+          "key": "dom",
+          "label": "Om du ändrar i DevTools i stället för i filen — vad händer när du laddar om?"
+        }
+      ]
     },
     "en": {
       "title": "The missing artist",
       "topic": "HTML, CSS & DOM",
       "intro": "The artist’s name is somewhere backstage, but it is missing from the screen. Inspect the stage card and bring the name into view.",
-      "question": "What did you find? How does HTML in the file differ from the DOM in Elements? What happens to a DevTools edit when you reload?",
-      "hint": "Inspect the artist name’s style attribute. Then try saving your fix in the HTML file."
+      "question": "What made the artist’s name invisible, and what did you change?\n\nIf you edit in DevTools instead of the file, what happens when you reload?",
+      "hint": "Inspect the artist name’s style attribute. Then try saving your fix in the HTML file.",
+      "fields": [
+        {
+          "key": "fix",
+          "label": "What made the artist’s name invisible, and what did you change?"
+        },
+        {
+          "key": "dom",
+          "label": "If you edit in DevTools instead of the file, what happens when you reload?"
+        }
+      ]
     },
     "file": "public/missions/02/index.html"
   },
@@ -41,15 +73,27 @@
       "title": "Play har tappat takten",
       "topic": "JavaScript & händelser",
       "intro": "Knappen finns. Spellistan är redo. Men Play tar rast. Hitta varför klicket inte ändrar spelarens status.",
-      "question": "Ta oss med från klick till funktion: hur hjälper JavaScript sidan att reagera? Vad upptäckte du i din felsökning?",
-      "hint": "Vilken händelse lyssnar addEventListener på?"
+      "question": "Ta oss från klicket till att spelaren reagerar. Vad var fel, och varför fungerar din ändring?",
+      "hint": "Vilken händelse lyssnar addEventListener på?",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Ta oss från klicket till att spelaren reagerar. Vad var fel, och varför fungerar din ändring?"
+        }
+      ]
     },
     "en": {
       "title": "Play has lost its rhythm",
       "topic": "JavaScript & events",
       "intro": "The button is here. The playlist is ready. But Play is taking a break. Find out why clicking does not change the player’s status.",
-      "question": "Walk us from the click to the function: how does JavaScript make the page react? What did you discover?",
-      "hint": "Which event is addEventListener listening for?"
+      "question": "Walk us from the click to the player responding. What was wrong, and why does your change work?",
+      "hint": "Which event is addEventListener listening for?",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Walk us from the click to the player responding. What was wrong, and why does your change work?"
+        }
+      ]
     },
     "file": "public/missions/03/app.js"
   },
@@ -59,15 +103,35 @@
       "title": "Hämta kvällens spellista",
       "topic": "Network & API",
       "intro": "DJ:n väntar på spellistan, men adressen leder fel. Hämta låtarna från musik-API:t och visa dem i spelaren.",
-      "question": "Vad visar Network för adress, metod och status? Vad betyder statusen? Hur skiljer sig GET från POST i vår musikplattform?",
-      "hint": "API:t finns på /api/tracks. Titta även på responsens innehåll."
+      "question": "Vilket fel fick du, och hur fick du spellistan att laddas?\n\nVi hämtar låtar med GET och skickar spelningar med POST. Förklara skillnaden med egna ord.",
+      "hint": "API:t finns på /api/tracks. Titta även på responsens innehåll.",
+      "fields": [
+        {
+          "key": "request",
+          "label": "Vilket fel fick du, och hur fick du spellistan att laddas?"
+        },
+        {
+          "key": "methods",
+          "label": "Vi hämtar låtar med GET och skickar spelningar med POST. Förklara skillnaden med egna ord."
+        }
+      ]
     },
     "en": {
       "title": "Get tonight’s playlist",
       "topic": "Network & API",
       "intro": "The DJ needs a playlist, but the address leads nowhere. Fetch the tracks from the music API and display them in the player.",
-      "question": "Which URL, method and status do you see in Network? What does that status mean? How do GET and POST differ in our music platform?",
-      "hint": "The API lives at /api/tracks. Inspect the response content too."
+      "question": "What error did you get, and how did you get the playlist to load?\n\nWe fetch tracks with GET and send plays with POST. Explain the difference in your own words.",
+      "hint": "The API lives at /api/tracks. Inspect the response content too.",
+      "fields": [
+        {
+          "key": "request",
+          "label": "What error did you get, and how did you get the playlist to load?"
+        },
+        {
+          "key": "methods",
+          "label": "We fetch tracks with GET and send plays with POST. Explain the difference in your own words."
+        }
+      ]
     },
     "file": "public/missions/04/app.js"
   },
@@ -77,15 +141,27 @@
       "title": "Kom ihåg favoriten",
       "topic": "Lagring & samtycke",
       "intro": "Välj din favorit och spara. Ladda sedan om spelaren med knappen nedanför. Har den glömt vad du valde? Hjälp den att minnas.",
-      "question": "Varför försvinner en vanlig JavaScript-variabel vid omladdning? Hur hjälper localStorage? Förklara skillnaden mellan nödvändig lagring och lagring för statistik som kräver samtycke.",
-      "hint": "Läsning finns redan. Saknas det något när eleven klickar Spara? Provsvaren sparas separat."
+      "question": "Spelaren minns nu din favorit. Förklara hur det fungerar efter omladdning och varför lagring av en favorit och lagring för besöksstatistik kan behöva behandlas olika.",
+      "hint": "Läsning finns redan. Saknas det något när eleven klickar Spara? Provsvaren sparas separat.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Spelaren minns nu din favorit. Förklara hur det fungerar efter omladdning och varför lagring av en favorit och lagring för besöksstatistik kan behöva behandlas olika."
+        }
+      ]
     },
     "en": {
       "title": "Remember your favourite",
       "topic": "Storage & consent",
       "intro": "Choose a favourite and save it. Then reload the player using the button below. Did it forget your choice? Help it remember.",
-      "question": "Why does an ordinary JavaScript variable disappear on reload? How does localStorage help? Explain essential storage versus analytics storage that requires consent.",
-      "hint": "Reading is already there. Is something missing when Save is clicked? Exam answers are saved separately."
+      "question": "The player now remembers your favourite. Explain how this works after a reload and why storing a favourite and storing visitor analytics may need to be treated differently.",
+      "hint": "Reading is already there. Is something missing when Save is clicked? Exam answers are saved separately.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "The player now remembers your favourite. Explain how this works after a reload and why storing a favourite and storing visitor analytics may need to be treated differently."
+        }
+      ]
     },
     "file": "public/missions/05/app.js"
   },
@@ -95,15 +171,27 @@
       "title": "Följ spelningen",
       "topic": "Identifiering & tracking",
       "intro": "Vi vill registrera att en låt spelats, men servern säger nej. Följ play-eventet i Network och ge det ett giltigt visitorId.",
-      "question": "Vilka uppgifter skickas i eventet? Hur skiljer sig ett besökar-ID från ett inloggat user-ID? Varför är ett besökar-ID inte automatiskt anonymt? Hur hänger detta ihop med ett dataLayer-event?",
-      "hint": "Servern kräver type, trackId och ett visitorId som är en sträng. Eventet går bara till din lokala server."
+      "question": "Vad får servern veta när du registrerar en spelning? Resonera om vad besökar-ID:t hjälper oss att förstå och om det berättar vem personen är.",
+      "hint": "Servern kräver type, trackId och ett visitorId som är en sträng. Eventet går bara till din lokala server.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Vad får servern veta när du registrerar en spelning? Resonera om vad besökar-ID:t hjälper oss att förstå och om det berättar vem personen är."
+        }
+      ]
     },
     "en": {
       "title": "Follow the play",
       "topic": "Identification & tracking",
       "intro": "We want to record a track being played, but the server says no. Follow the play event in Network and give it a valid visitorId.",
-      "question": "What is sent in the event? How does a visitor ID differ from a logged-in user ID? Why is a visitor ID not automatically anonymous? How does this relate to a dataLayer event?",
-      "hint": "The server needs type, trackId and a visitorId string. The event is sent only to your local server."
+      "question": "What does the server learn when you record a play? Discuss what the visitor ID helps us understand and whether it tells us who the person is.",
+      "hint": "The server needs type, trackId and a visitorId string. The event is sent only to your local server.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "What does the server learn when you record a play? Discuss what the visitor ID helps us understand and whether it tells us who the person is."
+        }
+      ]
     },
     "file": "public/missions/06/app.js"
   },
@@ -113,15 +201,27 @@
       "title": "Encore: en sista låt",
       "topic": "VG-spår · API & felhantering",
       "intro": "Publiken vill ha mer! Koppla in encore-API:t, visa låttiteln och fånga ett misslyckat anrop så att besökaren får ett begripligt besked.",
-      "question": "Beskriv flödet från fetch till text på sidan. Hur hanterar du HTTP-fel respektive nätverksfel? Hur skulle du undersöka en sida som laddar långsamt?",
-      "hint": "GET /api/encore ger ett objekt med title och artist. Kontrollera response.ok innan du läser JSON."
+      "question": "Beskriv hur du hämtar och visar bonuslåten. Hur hjälper du besökaren när anropet misslyckas? Motivera hur din lösning hanterar både HTTP-fel och nätverksfel. Hur skulle du undersöka långsam laddning, och vad skulle du leta efter?",
+      "hint": "GET /api/encore ger ett objekt med title och artist. Kontrollera response.ok innan du läser JSON.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Beskriv hur du hämtar och visar bonuslåten. Hur hjälper du besökaren när anropet misslyckas? Motivera hur din lösning hanterar både HTTP-fel och nätverksfel. Hur skulle du undersöka långsam laddning, och vad skulle du leta efter?"
+        }
+      ]
     },
     "en": {
       "title": "Encore: one more track",
       "topic": "VG path · API & error handling",
       "intro": "The crowd wants more! Connect the encore API, display the track title and catch a failed request so the visitor gets a helpful message.",
-      "question": "Describe the flow from fetch to text on screen. How do you handle HTTP errors versus network errors? How would you investigate a slow-loading page?",
-      "hint": "GET /api/encore returns title and artist. Check response.ok before reading JSON."
+      "question": "Describe how you fetch and display the bonus track. How do you help the visitor when the request fails? Explain how your solution handles both HTTP errors and network errors. How would you investigate slow loading, and what would you look for?",
+      "hint": "GET /api/encore returns title and artist. Check response.ok before reading JSON.",
+      "fields": [
+        {
+          "key": "reasoning",
+          "label": "Describe how you fetch and display the bonus track. How do you help the visitor when the request fails? Explain how your solution handles both HTTP errors and network errors. How would you investigate slow loading, and what would you look for?"
+        }
+      ]
     },
     "file": "public/missions/07/app.js"
   }

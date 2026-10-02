@@ -1,4 +1,4 @@
-# Backstage — IHM Examination (testdraft)
+# Backstage — IHM Examination
 
 En spelbar examination i Teknik för digitala plattformar: rädda en musikplattform genom sex felsökningsuppdrag och ett frivilligt Encore/VG-spår. Svenska och engelska kan bytas när som helst. Resonemang kan skrivas på båda språken.
 
@@ -16,9 +16,9 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 
 ## Viktigt när du provkör
 
-- Detta är en draft för lärartest, inte ett fastställt betygssystem. G/VG-kriterier ska stämmas av med kursplanen innan elever använder provet.
+- Tekniska kontroller visar funktion; läraren fastställer betyget utifrån examinationsunderlaget. AI är tillåtet som hjälpmedel.
 - Sex oberoende uppdrag: ett olöst syntaxfel hindrar inte navigation, svar eller rapportexport.
-- Ingen tidsgräns eller automatisk låsning i denna draft. Förfluten tid visas i rapporten. 120-minutersregel och kl. 13-stopp behöver bestämmas inför slutversionen.
+- Ingen tidsgräns eller automatisk låsning i applikationen. Förfluten tid visas i rapporten. 120-minutersregel och kl. 13-stopp behöver bestämmas inför provet.
 - Automatisk kontroll visar teknisk funktion. Resonemang och slutligt betyg bedöms av läraren. Encore-kontrollen testar hämtning/rendering, inte felhanteringens kvalitet.
 - Ingen verklig musikuppspelning behövs: Play ändrar spelarstatus. Allt är lokalt; inga externa API:er, typsnitt, analytics eller automatisk central inlämning används.
 - Svar sparas i webbläsarens `localStorage` och som JSON i serverns `data/`. Håll samma adress/port när du återupptar. Browserlagringen håller sessions-ID:t; serverkopian är en reservfil, inte en separat återställningsvy.
@@ -30,7 +30,7 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 
 `server.mjs`, `package.json`, `public/index.html`, `public/exam-shell.js`, `public/styles.css` känns igen från musikspelaren/labbarna. Uppgifterna har separata `index.html`/`app.js` under `public/missions/01`–`07`. Språktexterna bor i `app.js` och `missions.json`.
 
-`bridge.js` observerar uppgifternas beteende och returnerar kontrollresultat till provgränssnittet. Eleven arbetar i uppgiftsfilerna, inte provmotorn. Kontrollerna är avsiktligt synliga i en lokal draft och ska inte betraktas som fuskförebyggande.
+`bridge.js` observerar uppgifternas beteende och returnerar kontrollresultat till provgränssnittet. Eleven arbetar i uppgiftsfilerna, inte provmotorn. Kontrollerna är avsiktligt synliga i en lokal examination och ska inte betraktas som fuskförebyggande.
 
 ## API
 
@@ -49,3 +49,7 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 Nya omgångar börjar med ett obetygsatt övningssteg i `public/missions/00`. Det visar VS Code-sökvägen, hur du hittar uppgiftens fil i DevTools, hur du sparar och laddar om spelaren samt hur resonemang fungerar. Samma övning nås från uppdragskartan.
 
 Provets huvudfil heter `exam-shell.js`; elevernas uppgifter använder `app.js` i mapparna `missions/01`–`07`. Efter F5/Ctrl+R återkommer du till samma uppdrag i samma flik. **Ladda om spelaren** laddar bara uppgiften och behåller dina svar.
+
+## Frågor och svar
+
+Uppgift 1, 3 och 5–7 har ett större resonemangsfält. Uppgift 2 och 4 har två specifika fält. Svenska och engelska följer samma struktur. Tidigare svar från den äldre versionens tre fält visas separat och bevaras i både JSON- och HTML-rapporten.

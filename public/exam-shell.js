@@ -1,3 +1,4 @@
+import { answerEntries, legacyEntries } from "./answers.js";
 import { restoreNavigation, saveNavigation } from "./navigation.js";
 // Navigation och provsvar bor här. Uppgifternas kod finns i missions/.
 const words = {
@@ -48,7 +49,7 @@ const words = {
     finish: "Avsluta och spara",
     finished: "Provet är avslutat. Du kan fortfarande ladda ned rapporten.",
     grading:
-      "Detta är en testdraft. Tekniska kontroller är återkoppling, inte ett slutligt betyg. Läraren bedömer resonemang, G och VG.",
+      "Tekniska kontroller visar vilka funktioner som fungerar. Läraren bedömer dina förklaringar och fastställer betyget G eller VG. AI är tillåtet som hjälpmedel.",
     provisional:
       "Alla sex tekniska G-uppdrag är klara! Resonemangen återstår för lärarbedömning.",
     vg: "Encore är frivilligt. Kontrollen testar hämtning och visning; felhantering och VG bedöms av läraren.",
@@ -107,7 +108,7 @@ const words = {
     finish: "Finish and save",
     finished: "The exam is finished. You can still download the report.",
     grading:
-      "This is a test draft. Technical checks are feedback, not a final grade. Your teacher assesses reasoning, G and VG.",
+      "Technical checks show which functions work. Your teacher assesses your explanations and determines your G or VG grade. AI is allowed as a tool.",
     provisional:
       "All six technical G missions are complete! Reasoning still needs teacher assessment.",
     vg: "Encore is optional. The check tests fetching and rendering; error handling and VG need teacher assessment.",
@@ -250,7 +251,7 @@ function welcome() {
       finishedAt: null,
       missions: missions.map((m) => ({
         id: m.id,
-        answers: { observation: "", cause: "", solution: "" },
+        answers: {},
         attempts: [],
         passed: false,
       })),
@@ -378,15 +379,30 @@ function mission() {
       </section>
       <section class="panel">
         <h3>${t("reflect")}</h3>
-        <p class="question">${esc(m[lang].question)}</p>
+        <p class="muted">
+          ${lang === "sv" ? "Skriv med egna ord. Du kan resonera även om du inte fått koden att fungera." : "Use your own words. You can explain your reasoning even if your code is unfinished."}
+        </p>
         <form id="reasoning">
-          ${["observation", "cause", "solution"].map((k) => `<label class="field">${t(k)}<textarea name="${k}" maxlength="10000" ${state.finishedAt ? "disabled" : ""}>${esc(progress.answers[k])}</textarea></label>`).join("")}<button
+          ${m[lang].fields.map((field) => `<label class="field">${esc(field.label)}<textarea name="${field.key}" rows="${m[lang].fields.length === 1 ? 10 : 6}" maxlength="10000" ${state.finishedAt ? "disabled" : ""}>${esc(progress.answers[field.key] || "")}</textarea></label>`).join("")}<button
             class="primary"
             ${state.finishedAt ? "disabled" : ""}
           >
             ${t("save")}
           </button>
         </form>
+        ${
+          legacyEntries(progress, lang).length
+            ? `<details class="legacy-answers"><summary>${lang === "sv" ? "Tidigare svar — sparade från föregående frågeversion" : "Previous answers — kept from the earlier question version"}</summary>${legacyEntries(
+                progress,
+                lang,
+              )
+                .map(
+                  (entry) =>
+                    `<h4>${esc(entry.label)}</h4><p style="white-space: pre-wrap">${esc(entry.value)}</p>`,
+                )
+                .join("")}</details>`
+            : ""
+        }
         <p id="saveStatus" class="save-status">${t("local")}</p>
         <button id="next" class="ghost">
           ${current === 7 ? t("report") : t("continue")}
@@ -513,6 +529,11 @@ function report() {
           ...state,
           exportedAt: new Date().toISOString(),
           assessment: "Teacher review required",
+          questionVersion: "2026-10-02",
+          questions: missions.map((m) => ({
+            id: m.id,
+            fields: m[lang].fields,
+          })),
         },
         null,
         2,
@@ -532,12 +553,14 @@ function reportHTML() {
   return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${state.id}</p>${state.missions
     .map(
       (m) =>
-        `<section><h2>${m.id}. ${esc(missions[m.id - 1][lang].title)}</h2><p>${esc(missions[m.id - 1][lang].question)}</p><p>${esc(m.passed ? t("ready") : t("pending"))} · ${esc(t("attempts"))}: ${m.attempts.length}</p>${Object.entries(
-          m.answers,
+        `<section><h2>${m.id}. ${esc(missions[m.id - 1][lang].title)}</h2><p>${esc(missions[m.id - 1][lang].question)}</p><p>${esc(m.passed ? t("ready") : t("pending"))} · ${esc(t("attempts"))}: ${m.attempts.length}</p>${answerEntries(
+          missions[m.id - 1],
+          m,
+          lang,
         )
           .map(
-            ([k, v]) =>
-              `<h3>${esc(t(k))}</h3><pre>${esc(v || t("empty"))}</pre>`,
+            (entry) =>
+              `<h3>${esc(entry.label)}</h3><pre>${esc(entry.value || t("empty"))}</pre>`,
           )
           .join("")}</section>`,
     )
@@ -582,7 +605,7 @@ function tutorial() {
           "När Console visar ett fel: klicka på filnamnet vid felet och kontrollera hela sökvägen. Radnumret visar var felet upptäcks, inte alltid var det börjar.",
           "Ändra demoButton.disabled = true till demoButton.disabled = false i VS Code. Spara med Ctrl+S (Mac: Cmd+S).",
           "Klicka Ladda om spelaren här nedanför. Klicka sedan Testa knappen inne i spelaren och till sist Kontrollera övningen.",
-          "Skriv något i övningsfältet. Under provet skriver du vad du ser, vad du tror orsakar felet och hur du skulle lösa det. Du får gå vidare även om koden inte fungerar.",
+          "Skriv något i övningsfältet. Under provet varierar frågorna. Ibland får du ett större fält, ibland två. Svara på frågan som visas och förklara hur du tänker. Du får gå vidare även om koden inte fungerar.",
         ],
         check: "Kontrollera övningen",
         note: "Vad upptäckte du? (övning, bedöms inte)",
@@ -602,7 +625,7 @@ function tutorial() {
           "When Console shows an error: click its filename and check the full path. The line number shows where the problem is detected, not always where it starts.",
           "In VS Code, change demoButton.disabled = true to demoButton.disabled = false. Save with Ctrl+S (Mac: Cmd+S).",
           "Click Reload player below. Then click Try the button inside the player, followed by Check practice.",
-          "Write something in the practice field. In the exam, explain what you see, what you think causes the error and how you would fix it. You may continue even when your code is unfinished.",
+          "Write something in the practice field. Exam questions vary: sometimes there is one larger field, sometimes two. Answer the question shown and explain your thinking. You may continue even when your code is unfinished.",
         ],
         check: "Check practice",
         note: "What did you discover? (practice, ungraded)",
