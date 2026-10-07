@@ -64,6 +64,30 @@ test("local API, persistence and isolated broken mission", async () => {
     const broken = await (await fetch(base + "/missions/01/app.js")).text();
     assert.throws(() => new Function(broken), SyntaxError);
     assert.equal((await fetch(base + "/exam-shell.js")).status, 200);
+    // Lista över sparade omgångar (för "Återställ tidigare prov").
+    const listed = await (await fetch(base + "/api/sessions")).json();
+    const entry = listed.find((item) => item.id === "utf8-test");
+    assert.equal(entry, undefined, "not yet saved");
+    await post("/api/sessions/list-a", {
+      id: "list-a",
+      firstName: "Åsa",
+      lastName: "Öberg",
+      updatedAt: "2026-10-07T09:00:00.000Z",
+      missions: [],
+    });
+    await post("/api/sessions/list-b", {
+      id: "list-b",
+      firstName: "Bo",
+      lastName: "Berg",
+      updatedAt: "2026-10-07T10:00:00.000Z",
+      missions: [],
+    });
+    const list = await (await fetch(base + "/api/sessions")).json();
+    assert.deepEqual(
+      list.filter((i) => i.id.startsWith("list-")).map((i) => i.id),
+      ["list-b", "list-a"],
+    );
+    assert.equal(list.find((i) => i.id === "list-a").firstName, "Åsa");
     // Robusthet: inga 500 för vanliga felaktiga anrop.
     assert.equal((await fetch(base + "/missions/03/")).status, 200);
     assert.equal((await fetch(base + "/missions/03")).status, 404);

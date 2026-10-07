@@ -1,7 +1,19 @@
 import { collectSourceFiles, sourceSection } from "./submission.js";
 import { scoringRules, scoreSummary } from "./scoring.js";
 import { answerEntries, legacyEntries } from "./answers.js";
-import { restoreNavigation, saveNavigation } from "./navigation.js";
+import {
+  clearNavigation,
+  restoreNavigation,
+  saveNavigation,
+  savedSessionId,
+} from "./navigation.js";
+import {
+  backupFilename,
+  createBackup,
+  maxBackupBytes,
+  parseBackup,
+  validateSession,
+} from "./backup.js";
 // Navigation och provsvar bor här. Uppgifternas kod finns i missions/.
 const words = {
   sv: {
@@ -46,7 +58,6 @@ const words = {
     reportTitle: "Din insats, samlad.",
     reportIntro:
       "Här finns det du har löst och det du har förklarat. Ladda ned HTML-inlämningen med svar och kod och lämna den på lärplattformen.",
-    json: "Ladda ned JSON",
     html: "Ladda ned inlämningen (HTML)",
     finish: "Avsluta och spara",
     finished: "Provet är avslutat. Du kan fortfarande ladda ned rapporten.",
@@ -58,13 +69,51 @@ const words = {
     time: "Förfluten tid",
     new: "Starta ett nytt test",
     reset:
-      "Starta ett nytt test? Exportera först om du vill behålla den här omgången.",
+      "Starta ett nytt test? Spara först en säkerhetskopia om du vill behålla den här omgången.",
     empty: "Inget svar ännu",
     attempts: "Kontrollförsök",
     continue: "Nästa uppdrag →",
     clickFirst:
       "Klicka på uppgiftens knapp inne i spelaren först (efter varje omladdning), och välj sedan Kontrollera lösningen.",
     restored: "Dina svar återställdes från den lokala servern.",
+    savedServerOnly:
+      "Sparat på den lokala servern, men INTE i webbläsaren. Spara en säkerhetskopia nu.",
+    savedNone:
+      "Kunde inte spara varken i webbläsaren eller på servern. Spara en säkerhetskopia nu.",
+    backup: "Spara en säkerhetskopia av mina svar",
+    backupNote:
+      "Säkerhetskopian innehåller dina svar och framsteg. Spara kodändringar separat i VS Code.",
+    backupDone:
+      "Nedladdningen av säkerhetskopian startades: {file}. Kontrollera att filen finns i din nedladdningsmapp.",
+    backupFailed:
+      "Säkerhetskopian kunde inte skapas. Dina svar finns kvar i den öppna sidan — försök igen.",
+    backupReminder:
+      "Påminnelse: spara gärna en säkerhetskopia av dina svar innan du går vidare.",
+    lastBackup: "Senast i den här sidan:",
+    importBackup: "Återställ från säkerhetskopia",
+    importFailed:
+      "Filen kunde inte användas som säkerhetskopia. Dina nuvarande svar är oförändrade.",
+    importConfirm: "Återställa säkerhetskopian för {name}, sparad {time}?",
+    importReplace:
+      "Dina nuvarande svar för {current} (senast sparade {saved}) ersätts. Spara först en säkerhetskopia om du vill behålla dem.",
+    importDone: "Säkerhetskopian återställdes i den öppna sidan.",
+    submitVsBackup:
+      "Säkerhetskopian är bara till för dig: den kan återställa dina svar om något går fel och lämnas inte in. Inlämningen (HTML) innehåller svar och sparad kod och är filen du lämnar på lärplattformen.",
+    restorePrev: "Återställ tidigare prov",
+    restoreListTitle: "Sparade omgångar på den här serverns dator",
+    restoreNone: "Inga sparade omgångar hittades på servern.",
+    restoreListFailed:
+      "Kunde inte hämta listan. Kontrollera att servern körs (npm start) och försök igen.",
+    restoreLoad: "Återställ",
+    restoreSaved: "Senast sparad",
+    restoreFinished: "avslutad",
+    restoreFailed:
+      "Dina svar kunde inte hämtas från servern just nu. Ditt sessions-ID finns kvar, så du kan försöka igen.",
+    restoreInvalid:
+      "Serverkopian kunde inte användas. Prova en säkerhetskopia eller en annan sparad omgång.",
+    retryRestore: "Försök återställa igen",
+    retrying: "Försöker…",
+    loading: "Hämtar…",
   },
   en: {
     eyebrow: "YOUR MISSION · SAVE OPENING NIGHT",
@@ -108,7 +157,6 @@ const words = {
     reportTitle: "Your work, all together.",
     reportIntro:
       "Here is what you fixed and what you explained. Download the HTML submission with answers and code and submit it on the learning platform.",
-    json: "Download JSON",
     html: "Download submission (HTML)",
     finish: "Finish and save",
     finished: "The exam is finished. You can still download the report.",
@@ -119,13 +167,52 @@ const words = {
     vg: "Encore is optional. The check tests fetching and rendering; error handling and VG need teacher assessment.",
     time: "Elapsed time",
     new: "Start a new test",
-    reset: "Start a new test? Export first if you want to keep this attempt.",
+    reset:
+      "Start a new test? Save a backup first if you want to keep this attempt.",
     empty: "No answer yet",
     attempts: "Check attempts",
     continue: "Next mission →",
     clickFirst:
       "Click the mission’s button inside the player first (after every reload), then choose Check solution.",
     restored: "Your answers were restored from the local server.",
+    savedServerOnly:
+      "Saved on the local server, but NOT in the browser. Save a backup now.",
+    savedNone:
+      "Could not save in the browser or on the server. Save a backup now.",
+    backup: "Save a backup of my answers",
+    backupNote:
+      "The backup contains your answers and progress. Save code changes separately in VS Code.",
+    backupDone:
+      "The backup download has started: {file}. Check that the file is in your downloads folder.",
+    backupFailed:
+      "The backup could not be created. Your answers are still in the open page — try again.",
+    backupReminder:
+      "Reminder: consider saving a backup of your answers before moving on.",
+    lastBackup: "Most recent in this page:",
+    importBackup: "Restore from backup",
+    importFailed:
+      "The file could not be used as a backup. Your current answers are unchanged.",
+    importConfirm: "Restore the backup for {name}, saved {time}?",
+    importReplace:
+      "Your current answers for {current} (last saved {saved}) will be replaced. Save a backup first if you want to keep them.",
+    importDone: "The backup was restored in the open page.",
+    submitVsBackup:
+      "The backup is only for you: it can restore your answers if something goes wrong and is not submitted. The submission (HTML) contains answers and saved code and is the file you hand in on the learning platform.",
+    restorePrev: "Restore a previous exam",
+    restoreListTitle: "Saved attempts on this computer’s server",
+    restoreNone: "No saved attempts were found on the server.",
+    restoreListFailed:
+      "Could not fetch the list. Check that the server is running (npm start) and try again.",
+    restoreLoad: "Restore",
+    restoreSaved: "Last saved",
+    restoreFinished: "finished",
+    restoreFailed:
+      "Your answers could not be fetched from the server right now. Your session ID is kept, so you can try again.",
+    restoreInvalid:
+      "The server copy could not be used. Try a backup or another saved attempt.",
+    retryRestore: "Try to restore again",
+    retrying: "Trying…",
+    loading: "Loading…",
   },
 };
 const missions = await fetch("/missions.json").then((r) => r.json());
@@ -135,32 +222,45 @@ try {
   state = JSON.parse(localStorage.getItem(key));
 } catch {}
 if (state?.version !== "0.1.0" || !Array.isArray(state.missions)) state = null;
-// Om webbläsarlagringen rensats men fliken minns sessions-ID:t: hämta serverkopian.
-// If browser storage was cleared but the tab remembers the session ID, restore the server copy.
-let restored = false;
-if (!state) {
+// Hämta en sparad omgång från den lokala servern och validera den innan den används.
+// Fetch a saved attempt from the local server and validate it before use.
+async function fetchSession(id) {
   try {
-    const savedId = JSON.parse(
-      sessionStorage.getItem("backstage-navigation-v1"),
-    )?.sessionId;
-    if (/^[a-zA-Z0-9-]{1,80}$/.test(savedId || "")) {
-      const res = await fetch("/api/sessions/" + savedId, {
-        signal: AbortSignal.timeout(3000),
-      });
-      const copy = res.ok ? await res.json() : null;
-      if (
-        copy?.id === savedId &&
-        copy.version === "0.1.0" &&
-        Array.isArray(copy.missions)
-      ) {
-        state = copy;
-        restored = true;
-        try {
-          localStorage.setItem(key, JSON.stringify(state));
-        } catch {}
-      }
-    }
-  } catch {}
+    const res = await fetch("/api/sessions/" + encodeURIComponent(id), {
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+    });
+    if (res.status === 404) return { notFound: true };
+    if (!res.ok) return { transient: true };
+    const checked = validateSession(
+      await res.json(),
+      missions.map((m) => m.id),
+    );
+    if (checked.error || checked.session.id !== id) return { invalid: true };
+    return { session: checked.session };
+  } catch {
+    // Nätverksfel, timeout eller avbruten läsning: tillfälligt, ID:t behålls.
+    return { transient: true };
+  }
+}
+// Om webbläsarlagringen rensats men fliken minns sessions-ID:t: hämta serverkopian.
+// Misslyckas hämtningen behålls ID:t så att eleven kan försöka igen.
+// If browser storage was cleared but the tab remembers the session ID, restore the server copy.
+// If the fetch fails the ID is kept so the student can try again.
+let restored = false;
+let pendingRestoreId = null;
+if (!state) {
+  const savedId = savedSessionId(sessionStorage);
+  if (savedId) {
+    const result = await fetchSession(savedId);
+    if (result.session) {
+      state = result.session;
+      restored = true;
+      try {
+        localStorage.setItem(key, JSON.stringify(state));
+      } catch {}
+    } else if (result.transient) pendingRestoreId = savedId;
+  }
 }
 const navigation = restoreNavigation(sessionStorage, state);
 let lang = state?.language || "sv";
@@ -196,11 +296,42 @@ function toast(message) {
     5000,
   );
 }
+const timeFormat = () => (lang === "sv" ? "sv-SE" : "en-GB");
+const formatTime = (iso) =>
+  iso && !Number.isNaN(Date.parse(iso))
+    ? new Date(iso).toLocaleString(timeFormat(), {
+        dateStyle: "short",
+        timeStyle: "short",
+      })
+    : "—";
+// Vad som faktiskt sparats senast: webbläsaren och servern redovisas var för sig.
+// What was actually saved last: browser and server are reported separately.
+const saveInfo = { browser: null, server: null, at: null };
+let lastBackupAt = null;
+function saveText() {
+  const at = saveInfo.at
+    ? " (" +
+      saveInfo.at.toLocaleTimeString(timeFormat(), {
+        hour: "2-digit",
+        minute: "2-digit",
+      }) +
+      ")"
+    : "";
+  if (saveInfo.browser && saveInfo.server) return t("saved") + at;
+  if (saveInfo.browser) return t("fallback") + at;
+  if (saveInfo.server) return t("savedServerOnly") + at;
+  return t("savedNone");
+}
+function syncPosition() {
+  if (["tutorial", "map", "mission", "report"].includes(view))
+    state.position = { view, current };
+}
 // Spara provsvar i webbläsaren och köa en lokal serverkopia. / Persist answers and queue a server backup.
 function persist() {
   if (!state) return;
   state.language = lang;
   state.updatedAt = new Date().toISOString();
+  syncPosition();
   let browserSaved = true;
   try {
     localStorage.setItem(key, JSON.stringify(state));
@@ -224,13 +355,16 @@ function persist() {
         saved = res.ok;
       } catch {}
       if (revision === saveRevision) {
+        saveInfo.browser = browserSaved;
+        saveInfo.server = saved;
+        if (browserSaved || saved) saveInfo.at = new Date();
         const label = document.querySelector("#saveStatus");
-        if (label) label.textContent = saved ? t("saved") : t("fallback");
+        if (label) label.textContent = saveText();
         if (!browserSaved && !saved)
           toast(
             lang === "sv"
-              ? "Kunde inte spara. Ladda ned rapporten nu."
-              : "Unable to save. Download your report now.",
+              ? "Kunde inte spara. Spara en säkerhetskopia nu."
+              : "Unable to save. Save a backup now.",
           );
       }
     });
@@ -284,9 +418,19 @@ function welcome() {
         ><span class="chip">SV / EN</span>
       </div>
       <div class="panel entry">
+        ${pendingRestoreId && !state
+          ? `<div class="restore-problem" role="alert"><p>${t("restoreFailed")}</p><button class="primary" id="retryRestore">${t("retryRestore")}</button><p id="retryStatus" role="status" class="save-status"></p></div>`
+          : ""}
         <p>${t("note")}</p>
-        ${state ? `<p>${esc(state.firstName)} ${esc(state.lastName)}</p><button class="primary" id="resume">${t("resume")}</button><button class="ghost" id="new">${t("new")}</button>` : `<form id="start"><div class="name-row"><label class="field">${t("first")}<input name="first" required maxlength="80" autocomplete="given-name"></label><label class="field">${t("last")}<input name="last" required maxlength="80" autocomplete="family-name"></label></div><button class="primary">${t("start")}</button></form>`}
+        ${state
+          ? `<p>${esc(state.firstName)} ${esc(state.lastName)}</p><button class="primary" id="resume">${t("resume")}</button><button class="ghost" id="new">${t("new")}</button>`
+          : `<form id="start"><div class="name-row"><label class="field">${t("first")}<input name="first" required maxlength="80" autocomplete="given-name"></label><label class="field">${t("last")}<input name="last" required maxlength="80" autocomplete="family-name"></label></div><button class="primary">${t("start")}</button></form>`}
         <p class="save-status">${t("local")}</p>
+        <div class="actions restore-tools">
+          <button class="ghost" id="restorePrev">${t("restorePrev")}</button>
+          <button class="ghost" id="restoreBackup">${t("importBackup")}</button>
+        </div>
+        <div id="restoreList" role="status"></div>
         ${criteriaHTML()}
       </div>
     </div>
@@ -296,10 +440,14 @@ function welcome() {
       </div>
       <div class="record"></div>
       <div class="wave">
-        ${[12, 22, 38, 48, 28, 18, 40, 50, 32, 20, 35, 46, 25, 12].map((h) => `<i style="height:${h}px"></i>`).join("")}
+        ${[12, 22, 38, 48, 28, 18, 40, 50, 32, 20, 35, 46, 25, 12]
+          .map((h) => `<i style="height:${h}px"></i>`)
+          .join("")}
       </div>
       <p class="muted">
-        ${lang === "sv" ? "Från trasig plattform till premiär." : "From broken platform to opening night."}
+        ${lang === "sv"
+          ? "Från trasig plattform till premiär."
+          : "From broken platform to opening night."}
       </p>
     </div>
   </section>`;
@@ -338,14 +486,185 @@ function welcome() {
     render();
   });
   document.querySelector("#new")?.addEventListener("click", reset);
+  document
+    .querySelector("#retryRestore")
+    ?.addEventListener("click", retryRestore);
+  document
+    .querySelector("#restorePrev")
+    .addEventListener("click", showSessionList);
+  document
+    .querySelector("#restoreBackup")
+    .addEventListener("click", chooseBackupFile);
 }
 function reset() {
   if (!confirm(t("reset"))) return;
   state = null;
+  pendingRestoreId = null;
   localStorage.removeItem(key);
+  clearNavigation(sessionStorage);
   clearFavourite();
   view = "welcome";
   render();
+}
+
+// Gå in i en återställd omgång med alla svar, kontrollresultat och framsteg.
+// Enter a restored attempt with all answers, check results and progress.
+function adopt(session) {
+  state = session;
+  pendingRestoreId = null;
+  lang = session.language === "en" ? "en" : "sv";
+  language.value = lang;
+  const position = session.position;
+  if (session.finishedAt) view = "report";
+  else if (!session.practiceComplete) view = "tutorial";
+  else if (position?.view === "mission") {
+    view = "mission";
+    current = position.current;
+  } else if (position?.view === "report") view = "report";
+  else view = "map";
+  if (view === "tutorial" || view === "map") current = 1;
+  persist();
+  render();
+}
+// Visa ett meddelande där eleven tittar: backup-/återställningsrutan eller en toast.
+// Show a message where the student is looking: the backup/restore box or a toast.
+function say(message) {
+  const box =
+    document.querySelector("#backupStatus") ||
+    document.querySelector("#restoreList");
+  if (box) box.textContent = message;
+  else toast(message);
+}
+function confirmRestore(session, savedAt) {
+  let message = t("importConfirm")
+    .replace("{name}", session.firstName + " " + session.lastName)
+    .replace("{time}", formatTime(savedAt));
+  if (state)
+    message +=
+      "\n\n" +
+      t("importReplace")
+        .replace("{current}", state.firstName + " " + state.lastName)
+        .replace("{saved}", formatTime(state.updatedAt));
+  return confirm(message);
+}
+async function retryRestore() {
+  const button = document.querySelector("#retryRestore");
+  const status = document.querySelector("#retryStatus");
+  button.disabled = true;
+  status.textContent = t("retrying");
+  const result = await fetchSession(pendingRestoreId);
+  if (result.session) {
+    adopt(result.session);
+    toast(t("restored"));
+    return;
+  }
+  if (result.notFound || result.invalid) {
+    pendingRestoreId = null;
+    render();
+    say(t("restoreInvalid"));
+    return;
+  }
+  button.disabled = false;
+  status.textContent = t("restoreFailed");
+}
+async function showSessionList() {
+  const box = document.querySelector("#restoreList");
+  box.textContent = t("loading");
+  let items;
+  try {
+    const res = await fetch("/api/sessions", {
+      signal: AbortSignal.timeout(4000),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    items = await res.json();
+    if (!Array.isArray(items)) throw new Error("format");
+  } catch {
+    box.textContent = t("restoreListFailed");
+    return;
+  }
+  if (!items.length) {
+    box.textContent = t("restoreNone");
+    return;
+  }
+  box.innerHTML = `<h4>${t("restoreListTitle")}</h4><ul class="restore-items">${items
+    .map(
+      (item) =>
+        `<li><span><strong>${esc(item.firstName)} ${esc(item.lastName)}</strong><small>${t("restoreSaved")}: ${esc(formatTime(item.updatedAt))}${item.finishedAt ? " · " + t("restoreFinished") : ""}</small></span><button data-restore="${esc(item.id)}">${t("restoreLoad")}</button></li>`,
+    )
+    .join("")}</ul>`;
+  box.querySelectorAll("[data-restore]").forEach((button) => {
+    button.onclick = async () => {
+      button.disabled = true;
+      const result = await fetchSession(button.dataset.restore);
+      button.disabled = false;
+      if (!result.session) return say(t("restoreInvalid"));
+      // Namn och tid syns redan i listan; bekräfta bara om något ersätts.
+      // Name and time are already in the list; confirm only when something is replaced.
+      if (state && !confirmRestore(result.session, result.session.updatedAt))
+        return;
+      adopt(result.session);
+      toast(t("restored"));
+    };
+  });
+}
+
+// Säkerhetskopia: byggs av det öppna provet, så den fungerar även utan server.
+// Backup is built from the open exam, so it works even without a server.
+function backupHTML() {
+  return `<div class="backup"><div class="actions"><button id="backup">${t("backup")}</button><button id="importBackup" class="ghost">${t("importBackup")}</button></div><small class="muted">${t("backupNote")}</small><p id="backupStatus" role="status" class="save-status"></p></div>`;
+}
+function wireBackup() {
+  document.querySelector("#backup").onclick = downloadBackup;
+  document.querySelector("#importBackup").onclick = chooseBackupFile;
+}
+function downloadBackup() {
+  try {
+    const now = new Date();
+    syncPosition();
+    const file = backupFilename(state, now);
+    saveFile(file, createBackup(state, now), "application/json");
+    lastBackupAt = now;
+    say(t("backupDone").replace("{file}", file));
+  } catch {
+    say(t("backupFailed"));
+  }
+}
+function chooseBackupFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json,application/json";
+  input.hidden = true;
+  input.onchange = async () => {
+    const file = input.files[0];
+    input.remove();
+    if (file) await importBackupFile(file);
+  };
+  document.body.append(input);
+  input.click();
+}
+// Allt valideras innan något ersätts; ett fel lämnar nuvarande svar orörda.
+// Everything is validated before anything is replaced; an error leaves current answers untouched.
+async function importBackupFile(file) {
+  let result;
+  try {
+    if (file.size > maxBackupBytes) result = { error: "too-large" };
+    else
+      result = parseBackup(
+        await file.text(),
+        missions.map((m) => m.id),
+      );
+  } catch {
+    result = { error: "unreadable" };
+  }
+  if (result.error) {
+    say(t("importFailed") + " (" + result.error + ")");
+    return;
+  }
+  const { session, exportedAt } = result;
+  if (!confirmRestore(session, exportedAt || session.updatedAt)) return;
+  adopt(session);
+  toast(t("importDone"));
 }
 // Visa uppdragens framsteg utan att låsa olösta uppgifter. / Show progress without blocking missions.
 function map() {
@@ -371,8 +690,9 @@ function map() {
       <div class="progress">
         <div style="width:${(count / 6) * 100}%"></div>
       </div>
-      <small>${t("grading")}</small
-      >${count === 6 ? `<p class="badge">${t("provisional")}</p>` : ""}
+      <small>${t("grading")}</small>${count === 6
+        ? `<p class="badge">${t("provisional")}</p>`
+        : ""}
     </div>
     ${pointsHTML()}
     <div class="cards">
@@ -426,12 +746,21 @@ function mission() {
         <small class="muted">${t("file")}</small
         ><code class="path">${m.file}</code>
         <p class="save-status">
-          ${lang === "sv" ? "I DevTools: Sources → localhost → missions → " + String(current).padStart(2, "0") + ". Klicka på filnamnet i Console och kontrollera hela sökvägen." : "In DevTools: Sources → localhost → missions → " + String(current).padStart(2, "0") + ". Click the filename in Console and check its full path."}
+          ${lang === "sv"
+            ? "I DevTools: Sources → localhost → missions → " +
+              String(current).padStart(2, "0") +
+              ". Klicka på filnamnet i Console och kontrollera hela sökvägen."
+            : "In DevTools: Sources → localhost → missions → " +
+              String(current).padStart(2, "0") +
+              ". Click the filename in Console and check its full path."}
         </p>
         <iframe
           id="player"
           title="${esc(m[lang].title)}"
-          src="/missions/${String(current).padStart(2, "0")}/index.html?lang=${lang}"
+          src="/missions/${String(current).padStart(
+            2,
+            "0",
+          )}/index.html?lang=${lang}"
         ></iframe>
         <div class="actions">
           <button
@@ -447,36 +776,46 @@ function mission() {
           <summary>${t("hint")}</summary>
           <p class="muted">${esc(m[lang].hint)}</p>
         </details>
-        ${[4, 6, 7].includes(current) ? `<p class="save-status">${t("clickFirst")}</p>` : ""}
+        ${[4, 6, 7].includes(current)
+          ? `<p class="save-status">${t("clickFirst")}</p>`
+          : ""}
         ${current === 7 ? `<p class="save-status">${t("vg")}</p>` : ""}
       </section>
       <section class="panel">
         <h3>${t("reflect")}</h3>
         <p class="muted">
-          ${lang === "sv" ? "Skriv med egna ord. Du kan resonera även om du inte fått koden att fungera." : "Use your own words. You can explain your reasoning even if your code is unfinished."}
+          ${lang === "sv"
+            ? "Skriv med egna ord. Du kan resonera även om du inte fått koden att fungera."
+            : "Use your own words. You can explain your reasoning even if your code is unfinished."}
         </p>
         <form id="reasoning">
-          ${m[lang].fields.map((field) => `<label class="field">${esc(field.label)}<textarea name="${field.key}" rows="${m[lang].fields.length === 1 ? 10 : 6}" maxlength="10000" ${state.finishedAt ? "disabled" : ""}>${esc(progress.answers[field.key] || "")}</textarea></label>`).join("")}<button
+          ${m[lang].fields
+            .map(
+              (field) =>
+                `<label class="field">${esc(field.label)}<textarea name="${field.key}" rows="${m[lang].fields.length === 1 ? 10 : 6}" maxlength="10000" ${state.finishedAt ? "disabled" : ""}>${esc(progress.answers[field.key] || "")}</textarea></label>`,
+            )
+            .join("")}<button
             class="primary"
             ${state.finishedAt ? "disabled" : ""}
           >
             ${t("save")}
           </button>
         </form>
-        ${
-          legacyEntries(progress, lang).length
-            ? `<details class="legacy-answers"><summary>${lang === "sv" ? "Tidigare svar — sparade från föregående frågeversion" : "Previous answers — kept from the earlier question version"}</summary>${legacyEntries(
-                progress,
-                lang,
+        ${legacyEntries(progress, lang).length
+          ? `<details class="legacy-answers"><summary>${lang === "sv" ? "Tidigare svar — sparade från föregående frågeversion" : "Previous answers — kept from the earlier question version"}</summary>${legacyEntries(
+              progress,
+              lang,
+            )
+              .map(
+                (entry) =>
+                  `<h4>${esc(entry.label)}</h4><p style="white-space: pre-wrap">${esc(entry.value)}</p>`,
               )
-                .map(
-                  (entry) =>
-                    `<h4>${esc(entry.label)}</h4><p style="white-space: pre-wrap">${esc(entry.value)}</p>`,
-                )
-                .join("")}</details>`
-            : ""
-        }
-        <p id="saveStatus" class="save-status">${t("local")}</p>
+              .join("")}</details>`
+          : ""}
+        <p id="saveStatus" class="save-status">
+          ${saveInfo.at ? saveText() : t("local")}
+        </p>
+        ${backupHTML()}
         <button id="next" class="ghost">
           ${current === 7 ? t("report") : t("continue")}
         </button>
@@ -504,10 +843,26 @@ function mission() {
     persist();
     toast(t("review"));
   };
+  wireBackup();
   document.querySelector("#next").onclick = () => {
     if (current === 7) view = "report";
     else current++;
+    persist();
     render();
+    // Diskret påminnelse: ingen dialogruta och ingen automatisk nedladdning.
+    // Discreet reminder: no dialog and no automatic download.
+    toast(
+      t("backupReminder") +
+        (lastBackupAt
+          ? " " +
+            t("lastBackup") +
+            " " +
+            lastBackupAt.toLocaleTimeString(timeFormat(), {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : ""),
+    );
   };
   document.querySelector("#check").onclick = check;
 }
@@ -575,33 +930,47 @@ function report() {
     ${pointsHTML()}
     <p class="muted">${t("reportIntro")}</p>
     <p class="muted">
-      ${lang === "sv" ? "Spara alla ändringar i VS Code först (Ctrl+S eller Cmd+S). Låt servern vara igång. HTML-inlämningen innehåller dina svar och den sparade koden under varje uppgift. Öppna filen och kontrollera att koden finns med innan du lämnar den på lärplattformen." : "Save all changes in VS Code first (Ctrl+S or Cmd+S). Keep the server running. The HTML submission includes your answers and saved code under each mission. Open the file and check that the code is included before submitting it on the learning platform."}
+      ${lang === "sv"
+        ? "Spara alla ändringar i VS Code först (Ctrl+S eller Cmd+S). Låt servern vara igång. HTML-inlämningen innehåller dina svar och den sparade koden under varje uppgift. Öppna filen och kontrollera att koden finns med innan du lämnar den på lärplattformen."
+        : "Save all changes in VS Code first (Ctrl+S or Cmd+S). Keep the server running. The HTML submission includes your answers and saved code under each mission. Open the file and check that the code is included before submitting it on the learning platform."}
     </p>
     <div class="panel">
       <h3>${esc(state.firstName)} ${esc(state.lastName)}</h3>
       <p class="muted">
         ${t("time")}:
-        ${Math.floor(((state.finishedAt ? Date.parse(state.finishedAt) : Date.now()) - Date.parse(state.startedAt)) / 60000)}
+        ${Math.floor(
+          ((state.finishedAt ? Date.parse(state.finishedAt) : Date.now()) -
+            Date.parse(state.startedAt)) /
+            60000,
+        )}
         min
       </p>
       <p>${t("grading")}</p>
-      ${state.missions.map((m) => `<div class="summary-row"><strong>${m.id}. ${esc(missions[m.id - 1][lang].title)}</strong><div class="badge">${m.passed ? t("ready") : t("pending")} · ${answer(m) ? t("review") : t("empty")}</div><small>${t("attempts")}: ${m.attempts.length}</small>${missionPointsHTML(m.id)}</div>`).join("")}
+      ${state.missions
+        .map(
+          (m) =>
+            `<div class="summary-row"><strong>${m.id}. ${esc(missions[m.id - 1][lang].title)}</strong><div class="badge">${m.passed ? t("ready") : t("pending")} · ${answer(m) ? t("review") : t("empty")}</div><small>${t("attempts")}: ${m.attempts.length}</small>${missionPointsHTML(m.id)}</div>`,
+        )
+        .join("")}
       <div class="actions" style="margin-top:24px">
         <button id="html" class="primary">${t("html")}</button
-        ><button id="json">${t("json")}</button
         ><button id="finish" ${state.finishedAt ? "disabled" : ""}>
           ${t("finish")}
         </button>
       </div>
       ${state.finishedAt ? `<p>${t("finished")}</p>` : ""}
-      <p id="saveStatus" class="save-status">${t("local")}</p>
+      <p class="muted">${t("submitVsBackup")}</p>
+      ${backupHTML()}
+      <p id="saveStatus" class="save-status">
+        ${saveInfo.at ? saveText() : t("local")}
+      </p>
     </div>`;
   document.querySelector("#back").onclick = () => {
     view = "map";
     render();
   };
-  document.querySelector("#json").onclick = () => downloadSubmission("json");
-  document.querySelector("#html").onclick = () => downloadSubmission("html");
+  wireBackup();
+  document.querySelector("#html").onclick = downloadSubmission;
   document.querySelector("#finish").onclick = () => {
     state.finishedAt = new Date().toISOString();
     persist();
@@ -627,22 +996,28 @@ function reportHTML(sources) {
     .join("")}</html>`;
 }
 // Ladda ned en fil lokalt; ingen central inlämning görs. / Download a local file.
-function download(ext, content, type) {
+function saveFile(filename, content, type) {
   const url = URL.createObjectURL(new Blob([content], { type })),
     link = document.createElement("a");
   link.href = url;
-  link.download =
-    "resultat_" +
-    ((state.firstName + "_" + state.lastName)
-      .normalize("NFKD")
-      .replace(/[^a-zA-Z0-9_-]/g, "")
-      .replace(/^_+$/, "") || "elev") +
-    "_" +
-    state.id.slice(0, 8) +
-    "." +
-    ext;
+  link.download = filename;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function download(ext, content, type) {
+  saveFile(
+    "resultat_" +
+      ((state.firstName + "_" + state.lastName)
+        .normalize("NFKD")
+        .replace(/[^a-zA-Z0-9_-]/g, "")
+        .replace(/^_+$/, "") || "elev") +
+      "_" +
+      state.id.slice(0, 8) +
+      "." +
+      ext,
+    content,
+    type,
+  );
 }
 language.onchange = () => {
   lang = language.value;
@@ -726,13 +1101,16 @@ function tutorial() {
         </p>
         <label class="field"
           >${copy.note}<textarea id="practice-answer" maxlength="10000">
-${esc(state.practiceAnswer || "")}</textarea>
+${esc(state.practiceAnswer || "")}</textarea
+          >
         </label>
         <p id="saveStatus" class="save-status">${t("local")}</p>
       </section>
       <section class="panel">
         <ol>
-          ${copy.steps.map((step) => `<li style="margin-bottom: 16px">${esc(step)}</li>`).join("")}
+          ${copy.steps
+            .map((step) => `<li style="margin-bottom: 16px">${esc(step)}</li>`)
+            .join("")}
         </ol>
         <button id="practice-go" class="primary">${copy.go}</button>
       </section>
@@ -801,25 +1179,15 @@ function sourceSummaryHTML(sources) {
   }</section>`;
 }
 
-async function downloadSubmission(format) {
-  const buttons = [...document.querySelectorAll("#html, #json")];
+async function downloadSubmission() {
+  const buttons = [...document.querySelectorAll("#html")];
   buttons.forEach((button) => (button.disabled = true));
   const status = document.querySelector("#saveStatus");
   status.textContent =
     lang === "sv" ? "Hämtar din sparade kod…" : "Collecting your saved code…";
   try {
     const sources = await collectSourceFiles(missions);
-    const payload = {
-      ...state,
-      exportedAt: new Date().toISOString(),
-      assessment: "Teacher review required",
-      scoring: scoreSummary(state.missions),
-      questionVersion: "2026-10-02",
-      questions: missions.map((m) => ({ id: m.id, fields: m[lang].fields })),
-      sources,
-    };
-    if (format === "html") download("html", reportHTML(sources), "text/html");
-    else download("json", JSON.stringify(payload, null, 2), "application/json");
+    download("html", reportHTML(sources), "text/html");
     if (sources.complete) {
       status.textContent =
         lang === "sv"

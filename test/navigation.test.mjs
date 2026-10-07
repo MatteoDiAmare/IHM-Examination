@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { restoreNavigation, saveNavigation } from "../public/navigation.js";
+import {
+  clearNavigation,
+  restoreNavigation,
+  saveNavigation,
+  savedSessionId,
+} from "../public/navigation.js";
 
 test("reload restores the exact mission for the same student session", () => {
   const values = new Map();
@@ -21,6 +26,10 @@ test("reload restores the exact mission for the same student session", () => {
   });
   saveNavigation(storage, state, "tutorial", 1);
   assert.equal(restoreNavigation(storage, state).view, "tutorial");
+  // Utan state får sessions-ID:t inte raderas (misslyckad återställning).
   saveNavigation(storage, null, "welcome", 1);
+  assert.equal(savedSessionId(storage), "student-a");
+  clearNavigation(storage);
   assert.equal(values.size, 0);
+  assert.equal(savedSessionId(storage), null);
 });

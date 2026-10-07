@@ -22,9 +22,30 @@ export function restoreNavigation(storage, state) {
   }
 }
 
+// Läs sparat sessions-ID även när provet inte kunnat återställas ännu.
+// Read the saved session ID even when the exam has not been restored yet.
+export function savedSessionId(storage) {
+  try {
+    const id = JSON.parse(storage.getItem(navigationKey))?.sessionId;
+    return typeof id === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(id)
+      ? id
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearNavigation(storage) {
+  try {
+    storage.removeItem(navigationKey);
+  } catch {}
+}
+
+// Utan state rör vi ingenting: ID:t ska överleva ett misslyckat återställningsförsök.
+// Without state we touch nothing: the ID must survive a failed restore attempt.
 export function saveNavigation(storage, state, view, current) {
   try {
-    if (!state) return storage.removeItem(navigationKey);
+    if (!state) return;
     storage.setItem(
       navigationKey,
       JSON.stringify({ sessionId: state.id, view, current }),

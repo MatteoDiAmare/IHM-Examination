@@ -424,3 +424,38 @@ footer {
   font-size: 0.9rem;
   line-height: 1.6;
 }
+
+.restore-tools {
+  margin-top: 14px;
+}
+.restore-problem {
+  border: 1px solid var(--violet);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.restore-items {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.restore-items li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.restore-items small {
+  display: block;
+  color: var(--muted);
+}
+.backup {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}

@@ -1,6 +1,13 @@
 import http from "node:http";
 import { randomUUID } from "node:crypto";
-import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  rename,
+  readdir,
+  stat,
+} from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -32,6 +39,41 @@ export function createServer(dataDir = path.join(root, "data")) {
           title: "Encore: Moonrise",
           artist: "Backstage Sessions",
         });
+      // Lista sparade omgångar på den här lokala servern (för "Återställ tidigare prov").
+      // List saved sessions on this local server (for "Restore a previous exam").
+      if (req.method === "GET" && url.pathname === "/api/sessions") {
+        let names = [];
+        try {
+          names = await readdir(dataDir);
+        } catch (e) {
+          if (e.code !== "ENOENT") throw e;
+        }
+        const items = [];
+        for (const name of names) {
+          const match = name.match(/^([a-zA-Z0-9-]{1,80})\.json$/);
+          if (!match) continue;
+          try {
+            const file = path.join(dataDir, name);
+            const value = JSON.parse(await readFile(file, "utf8"));
+            if (value?.id !== match[1] || !Array.isArray(value.missions))
+              continue;
+            const text = (v) => (typeof v === "string" ? v.slice(0, 80) : "");
+            items.push({
+              id: value.id,
+              firstName: text(value.firstName),
+              lastName: text(value.lastName),
+              startedAt: text(value.startedAt),
+              finishedAt: value.finishedAt ? text(value.finishedAt) : null,
+              updatedAt:
+                text(value.updatedAt) || (await stat(file)).mtime.toISOString(),
+            });
+          } catch {
+            // Hoppa över trasiga filer / skip unreadable files
+          }
+        }
+        items.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+        return json(res, 200, items.slice(0, 100));
+      }
       const session = url.pathname.match(
         /^\/api\/sessions\/([a-zA-Z0-9-]{1,80})$/,
       );
