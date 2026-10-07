@@ -1,4 +1,5 @@
 import http from "node:http";
+import { randomUUID } from "node:crypto";
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,7 +20,11 @@ export function createServer(dataDir = path.join(root, "data")) {
     try {
       const url = new URL(req.url, "http://localhost");
       if (req.method === "GET" && url.pathname === "/api/health")
-        return json(res, 200, { status: "ok", version: "0.1.0" });
+        return json(res, 200, {
+          status: "ok",
+          app: "backstage-exam",
+          version: "0.1.0",
+        });
       if (req.method === "GET" && url.pathname === "/api/tracks")
         return json(res, 200, tracks);
       if (req.method === "GET" && url.pathname === "/api/encore")
@@ -49,24 +54,31 @@ export function createServer(dataDir = path.join(root, "data")) {
         req.method === "POST" &&
         (session || url.pathname === "/api/events")
       ) {
-        let body = "";
+        if (!/^application\/json\b/i.test(req.headers["content-type"] || ""))
+          return json(res, 415, { error: "UNSUPPORTED_MEDIA_TYPE" });
+        const chunks = [];
+        let size = 0;
         for await (const chunk of req) {
-          body += chunk;
-          if (Buffer.byteLength(body) > 1048576)
-            return json(res, 413, { error: "TOO_LARGE" });
+          size += chunk.length;
+          if (size > 1048576) return json(res, 413, { error: "TOO_LARGE" });
+          chunks.push(chunk);
         }
         let value;
         try {
-          value = JSON.parse(body);
+          value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
         } catch {
           return json(res, 400, { error: "INVALID_JSON" });
         }
+        if (!value || typeof value !== "object" || Array.isArray(value))
+          return json(res, 422, {
+            error: session ? "INVALID_SESSION" : "INVALID_EVENT",
+          });
         if (session) {
           if (value.id !== session[1] || !Array.isArray(value.missions))
             return json(res, 422, { error: "INVALID_SESSION" });
           await mkdir(dataDir, { recursive: true });
           const target = path.join(dataDir, session[1] + ".json");
-          const temp = target + "." + crypto.randomUUID() + ".tmp";
+          const temp = target + "." + randomUUID() + ".tmp";
           await writeFile(temp, JSON.stringify(value, null, 2));
           await rename(temp, target);
           return json(res, 200, {
@@ -83,48 +95,59 @@ export function createServer(dataDir = path.join(root, "data")) {
           return json(res, 422, { accepted: false, error: "INVALID_EVENT" });
         return json(res, 202, {
           accepted: true,
-          receiptId: crypto.randomUUID(),
+          receiptId: randomUUID(),
         });
       }
-      if (req.method !== "GET")
+      if (req.method !== "GET" && req.method !== "HEAD")
         return json(res, 405, { error: "METHOD_NOT_ALLOWED" });
-      const file = path.resolve(
-        root,
-        "public",
-        "." +
-          decodeURIComponent(
-            url.pathname === "/" ? "/index.html" : url.pathname,
-          ),
-      );
+      let pathname;
+      try {
+        pathname = decodeURIComponent(url.pathname);
+      } catch {
+        return json(res, 400, { error: "BAD_REQUEST" });
+      }
+      if (pathname.endsWith("/")) pathname += "index.html";
+      const file = path.resolve(root, "public", "." + pathname);
       if (!file.startsWith(path.join(root, "public") + path.sep))
         return json(res, 403, { error: "FORBIDDEN" });
       try {
         const content = await readFile(file);
+        const type = {
+          ".html": "text/html; charset=utf-8",
+          ".js": "text/javascript; charset=utf-8",
+          ".css": "text/css; charset=utf-8",
+          ".json": "application/json; charset=utf-8",
+        }[path.extname(file)];
         res.writeHead(200, {
-          "Content-Type":
-            {
-              ".html": "text/html",
-              ".js": "text/javascript",
-              ".css": "text/css",
-              ".json": "application/json",
-            }[path.extname(file)] + "; charset=utf-8",
+          "Content-Type": type || "application/octet-stream",
+          "X-Content-Type-Options": "nosniff",
           "Cache-Control": "no-store",
         });
         res.end(content);
       } catch (e) {
-        if (e.code === "ENOENT") return json(res, 404, { error: "NOT_FOUND" });
+        if (e.code === "ENOENT" || e.code === "EISDIR" || e.code === "ENOTDIR")
+          return json(res, 404, { error: "NOT_FOUND" });
         throw e;
       }
-    } catch {
+    } catch (error) {
+      console.error("Backstage:", error);
       if (!res.headersSent) json(res, 500, { error: "SERVER_ERROR" });
       else res.end();
     }
   });
 }
-if (process.argv[1] === fileURLToPath(import.meta.url))
-  createServer().listen(
-    Number(process.env.PORT) || 3000,
-    process.env.HOST || "127.0.0.1",
-    () =>
-      console.log("Backstage: http://localhost:" + (process.env.PORT || 3000)),
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const port = Number(process.env.PORT) || 3000;
+  const server = createServer();
+  server.on("error", (error) => {
+    console.error(
+      error.code === "EADDRINUSE"
+        ? `Port ${port} används redan (kanske en annan server). Stäng den först så att dina sparade svar hittas på samma adress. / Port ${port} is already in use. Stop the other server first so your saved answers stay on the same address.`
+        : error,
+    );
+    process.exit(1);
+  });
+  server.listen(port, process.env.HOST || "127.0.0.1", () =>
+    console.log("Backstage: http://localhost:" + port),
   );
+}

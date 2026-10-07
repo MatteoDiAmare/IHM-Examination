@@ -21,7 +21,7 @@ I Codespaces: kör `npm start`, använd `HOST=0.0.0.0 npm start` om portvidarebe
 - Ingen tidsgräns eller automatisk låsning i applikationen. Förfluten tid visas i rapporten. 120-minutersregel och kl. 13-stopp behöver bestämmas inför provet.
 - Automatisk kontroll visar teknisk funktion. Resonemang och slutligt betyg bedöms av läraren. Encore-kontrollen testar hämtning/rendering, inte felhanteringens kvalitet.
 - Ingen verklig musikuppspelning behövs: Play ändrar spelarstatus. Allt är lokalt; inga externa API:er, typsnitt, analytics eller automatisk central inlämning används.
-- Svar sparas i webbläsarens `localStorage` och som JSON i serverns `data/`. Håll samma adress/port när du återupptar. Browserlagringen håller sessions-ID:t; serverkopian är en reservfil, inte en separat återställningsvy.
+- Svar sparas i webbläsarens `localStorage` och som JSON i serverns `data/`. Håll samma adress/port när du återupptar. Browserlagringen håller sessions-ID:t; om webbläsarlagringen rensas men fliken finns kvar återställs svaren automatiskt från serverkopian. Återställning efter att fliken stängts sker inte automatiskt.
 - `data/` följer inte med Git. Lägg inte elevrapporter med namn i offentliga repon. En lokal rapport är redigerbar och inte ett manipulationssäkert betygsbevis.
 - När du avslutar låses svar och kontroller för den omgången. Export fungerar fortfarande. På startsidan kan du starta ett nytt test; exportera först om du vill behålla tidigare omgång.
 - Dina ändrade uppgiftsfiler återställs inte av ett nytt test. Återställ dem med GitHub Desktop för att testa buggarna igen. Favoritlagringen (`backstage-favourite`) kan rensas separat i DevTools.

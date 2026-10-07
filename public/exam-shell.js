@@ -62,6 +62,9 @@ const words = {
     empty: "Inget svar ännu",
     attempts: "Kontrollförsök",
     continue: "Nästa uppdrag →",
+    clickFirst:
+      "Klicka på uppgiftens knapp inne i spelaren först (efter varje omladdning), och välj sedan Kontrollera lösningen.",
+    restored: "Dina svar återställdes från den lokala servern.",
   },
   en: {
     eyebrow: "YOUR MISSION · SAVE OPENING NIGHT",
@@ -120,6 +123,9 @@ const words = {
     empty: "No answer yet",
     attempts: "Check attempts",
     continue: "Next mission →",
+    clickFirst:
+      "Click the mission’s button inside the player first (after every reload), then choose Check solution.",
+    restored: "Your answers were restored from the local server.",
   },
 };
 const missions = await fetch("/missions.json").then((r) => r.json());
@@ -129,6 +135,33 @@ try {
   state = JSON.parse(localStorage.getItem(key));
 } catch {}
 if (state?.version !== "0.1.0" || !Array.isArray(state.missions)) state = null;
+// Om webbläsarlagringen rensats men fliken minns sessions-ID:t: hämta serverkopian.
+// If browser storage was cleared but the tab remembers the session ID, restore the server copy.
+let restored = false;
+if (!state) {
+  try {
+    const savedId = JSON.parse(
+      sessionStorage.getItem("backstage-navigation-v1"),
+    )?.sessionId;
+    if (/^[a-zA-Z0-9-]{1,80}$/.test(savedId || "")) {
+      const res = await fetch("/api/sessions/" + savedId, {
+        signal: AbortSignal.timeout(3000),
+      });
+      const copy = res.ok ? await res.json() : null;
+      if (
+        copy?.id === savedId &&
+        copy.version === "0.1.0" &&
+        Array.isArray(copy.missions)
+      ) {
+        state = copy;
+        restored = true;
+        try {
+          localStorage.setItem(key, JSON.stringify(state));
+        } catch {}
+      }
+    }
+  } catch {}
+}
 const navigation = restoreNavigation(sessionStorage, state);
 let lang = state?.language || "sv";
 let view = navigation.view;
@@ -139,6 +172,13 @@ const app = document.querySelector("#app");
 const language = document.querySelector("#language");
 language.value = lang;
 const t = (k) => words[lang][k];
+// Favoritövningen ligger utanför provsvaren och måste nollställas mellan omgångar.
+// The favourite exercise lives outside exam answers and must be reset between attempts.
+const clearFavourite = () => {
+  try {
+    localStorage.removeItem("backstage-favourite");
+  } catch {}
+};
 const esc = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,
@@ -284,6 +324,7 @@ function welcome() {
         passed: false,
       })),
     };
+    clearFavourite();
     persist();
     view = "tutorial";
     render();
@@ -302,6 +343,7 @@ function reset() {
   if (!confirm(t("reset"))) return;
   state = null;
   localStorage.removeItem(key);
+  clearFavourite();
   view = "welcome";
   render();
 }
@@ -405,6 +447,7 @@ function mission() {
           <summary>${t("hint")}</summary>
           <p class="muted">${esc(m[lang].hint)}</p>
         </details>
+        ${[4, 6, 7].includes(current) ? `<p class="save-status">${t("clickFirst")}</p>` : ""}
         ${current === 7 ? `<p class="save-status">${t("vg")}</p>` : ""}
       </section>
       <section class="panel">
@@ -567,7 +610,7 @@ function report() {
 }
 // Skapa en läsbar rapport och skydda elevtext som HTML-text. / Export escaped student text.
 function reportHTML(sources) {
-  return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}.source-code{font:13px/1.5 monospace;background:#f1f3f6;padding:16px;overflow-wrap:anywhere}.missing-code{color:#a01919;font-weight:bold}.score-table table{width:100%;border-collapse:collapse}.score-table td,.score-table th{text-align:left;padding:8px;border-bottom:1px solid #ccc}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${state.id}</p>${pointsHTML()}${sourceSummaryHTML(sources)}${state.missions
+  return `<!doctype html><html lang="${esc(lang)}"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Backstage report</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:20px;color:#172033}section{border-top:1px solid #ccc;margin-top:24px}pre{white-space:pre-wrap;font:inherit}small{color:#555}.source-code{font:13px/1.5 monospace;background:#f1f3f6;padding:16px;overflow-wrap:anywhere}.missing-code{color:#a01919;font-weight:bold}.score-table table{width:100%;border-collapse:collapse}.score-table td,.score-table th{text-align:left;padding:8px;border-bottom:1px solid #ccc}</style><h1>Backstage — ${esc(state.firstName)} ${esc(state.lastName)}</h1><p>${esc(t("grading"))}</p><p>${esc(state.startedAt)} → ${esc(state.finishedAt || "—")} · ${esc(state.id)}</p>${pointsHTML()}${sourceSummaryHTML(sources)}${state.missions
     .map(
       (m) =>
         `<section><h2>${m.id}. ${esc(missions[m.id - 1][lang].title)}</h2><p>${esc(missions[m.id - 1][lang].question)}</p>${missionPointsHTML(m.id)}<p>${esc(m.passed ? t("ready") : t("pending"))} · ${esc(t("attempts"))}: ${m.attempts.length}</p>${answerEntries(
@@ -590,9 +633,10 @@ function download(ext, content, type) {
   link.href = url;
   link.download =
     "resultat_" +
-    (state.firstName + "_" + state.lastName)
+    ((state.firstName + "_" + state.lastName)
       .normalize("NFKD")
-      .replace(/[^a-zA-Z0-9_-]/g, "") +
+      .replace(/[^a-zA-Z0-9_-]/g, "")
+      .replace(/^_+$/, "") || "elev") +
     "_" +
     state.id.slice(0, 8) +
     "." +
@@ -606,6 +650,7 @@ language.onchange = () => {
   render();
 };
 render();
+if (restored) toast(t("restored"));
 
 // Ett första obetygsatt uppdrag lär eleven provets arbetsflöde.
 // An ungraded warm-up teaches the exam workflow before mission 01.
